@@ -4,7 +4,7 @@ A refined, full-stack job application tracker built with Next.js 14, Supabase, a
 
 ## Stack
 
-- **Framework:** Next.js 16.2.6 (App Router)
+- **Framework:** Next.js 14 (App Router)
 - **Server Logic:** Next.js Server Actions
 - **Database & Auth:** Supabase (PostgreSQL + Row Level Security + Auth)
 - **Styling:** Tailwind CSS with custom design system

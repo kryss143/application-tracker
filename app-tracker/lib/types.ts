@@ -1,0 +1,76 @@
+export type ApplicationStatus =
+  | "wishlist"
+  | "applied"
+  | "interview"
+  | "offer"
+  | "rejected";
+
+export interface Application {
+  id: string;
+  user_id: string;
+  company_name: string;
+  job_title: string;
+  status: ApplicationStatus;
+  job_url: string | null;
+  location: string | null;
+  salary_range: string | null;
+  notes: string | null;
+  applied_date: string | null;
+  followup_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActionResult {
+  success: boolean;
+  error?: string;
+}
+
+export const STATUS_CONFIG: Record<
+  ApplicationStatus,
+  { label: string; color: string; borderColor: string; bgColor: string; badgeBg: string }
+> = {
+  wishlist: {
+    label: "Wishlist",
+    color: "text-slate-400",
+    borderColor: "border-slate-500",
+    bgColor: "bg-slate-500/10",
+    badgeBg: "bg-slate-500/20 text-slate-300 border border-slate-500/30",
+  },
+  applied: {
+    label: "Applied",
+    color: "text-blue-400",
+    borderColor: "border-blue-500",
+    bgColor: "bg-blue-500/10",
+    badgeBg: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
+  },
+  interview: {
+    label: "Interview",
+    color: "text-amber-400",
+    borderColor: "border-amber-500",
+    bgColor: "bg-amber-500/10",
+    badgeBg: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+  },
+  offer: {
+    label: "Offer",
+    color: "text-emerald-400",
+    borderColor: "border-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+  },
+  rejected: {
+    label: "Rejected",
+    color: "text-red-400",
+    borderColor: "border-red-500",
+    bgColor: "bg-red-500/10",
+    badgeBg: "bg-red-500/20 text-red-300 border border-red-500/30",
+  },
+};
+
+export const STATUS_ORDER: ApplicationStatus[] = [
+  "wishlist",
+  "applied",
+  "interview",
+  "offer",
+  "rejected",
+];

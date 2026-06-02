@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* Font families */
+  --font-display: "'Playfair Display'", "Georgia", serif;
+  --font-body: "'DM Sans'", system-ui, sans-serif;
+  --font-mono: "'JetBrains Mono'", monospace;
+
+  /* Colors - ink */
+  --color-ink-950: #0a0a0f;
+  --color-ink-900: #111118;
+  --color-ink-800: #1a1a24;
+  --color-ink-700: #252532;
+  --color-ink-600: #32324a;
+  --color-ink-500: #4a4a6a;
+  --color-ink-400: #6b6b8a;
+  --color-ink-300: #9090aa;
+  --color-ink-200: #b8b8cc;
+  --color-ink-100: #e0e0ea;
+  --color-ink-50: #f4f4f8;
+
+  /* Colors - gold */
+  --color-gold-600: #b8860b;
+  --color-gold-500: #d4a017;
+  --color-gold-400: #f0b429;
+  --color-gold-300: #f5c842;
+  --color-gold-200: #fad96a;
+  --color-gold-100: #fde9a0;
+
+  /* Colors - status */
+  --color-status-wishlist: #64748b;
+  --color-status-applied: #3b82f6;
+  --color-status-interview: #f59e0b;
+  --color-status-offer: #10b981;
+  --color-status-rejected: #ef4444;
+
+  /* Background images */
+  --background-image-mesh-gradient:
+    radial-gradient(
+      at 40% 20%,
+      hsla(240, 100%, 74%, 0.08) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.04) 0px, transparent 50%);
+
+  /* Box shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover:
+    0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(240, 180, 41, 0.15);
+}
+
+@layer base {
+  * {
+    @apply border-ink-700;
+  }
+  body {
+    @apply bg-ink-950 text-ink-100;
+  }
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 240 5% 90%;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #32324a transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #32324a;
+    border-radius: 2px;
+  }
+}
+
+/* Subtle grid overlay */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Card entrance animation */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.3s ease-out forwards;
+}
+
+/* Shimmer for skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #1a1a24 25%, #252532 50%, #1a1a24 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
