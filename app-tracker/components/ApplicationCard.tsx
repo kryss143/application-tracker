@@ -73,7 +73,7 @@ export default function ApplicationCard({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowMenu(false)}
                 />
-                <div className="absolute right-0 top-8 z-20 bg-ink-800 border border-ink-600 rounded-xl shadow-card-hover overflow-hidden min-w-[130px]">
+                <div className="absolute right-0 top-8 z-20 bg-ink-800 border border-ink-600 rounded-xl shadow-card-hover overflow-hidden min-w-32.5">
                   <button
                     onClick={() => {
                       setShowMenu(false);
@@ -137,7 +137,9 @@ export default function ApplicationCard({
 
         {/* Footer */}
         <div className="mt-3 pt-3 border-t border-ink-700 flex items-center justify-between">
-          <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${config.badgeBg}`}>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-md font-medium ${config.badgeBg}`}
+          >
             {config.label}
           </span>
           <span className="text-ink-600 text-xs font-mono">

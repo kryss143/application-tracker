@@ -22,7 +22,9 @@ export default function LoginPage() {
         setLoading(false);
       }
       // leave loading=true on success — redirect() is in flight
-    } catch {
+    } catch (err) {
+      // Re-throw Next.js redirect errors so navigation works
+      if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
       setError("Network error. Please try again.");
       setLoading(false);
     }
