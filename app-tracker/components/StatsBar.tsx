@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Application } from "@/lib/types";
 import {
   BarChart2,
@@ -28,7 +28,9 @@ interface StatsBarProps {
   applications: Application[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
+type StatusKey = "wishlist" | "applied" | "interview" | "offer" | "rejected";
+
+const STATUS_COLORS: Record<StatusKey, string> = {
   wishlist: "#6B7280",
   applied: "#3B82F6",
   interview: "#F59E0B",
@@ -36,7 +38,17 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "#EF4444",
 };
 
+// Maps each stat card to the status(es) it represents in the donut
+const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
+  active: ["wishlist", "applied", "interview", "offer"],
+  interviews: ["interview"],
+  offers: ["offer"],
+  rejected: ["rejected"],
+};
+
 export default function StatsBar({ applications }: StatsBarProps) {
+  const [activeStatus, setActiveStatus] = useState<StatusKey | null>(null);
+
   // =========================
   // KPI Metrics
   // =========================
@@ -60,71 +72,77 @@ export default function StatsBar({ applications }: StatsBarProps) {
   // Pie Chart Data
   // =========================
   const statusData = useMemo(() => {
-    const counts = {
+    const counts: Record<StatusKey, number> = {
       wishlist: 0,
       applied: 0,
       interview: 0,
       offer: 0,
       rejected: 0,
     };
-
     applications.forEach((app) => {
-      if (app.status in counts) {
-        counts[app.status as keyof typeof counts]++;
-      }
+      if (app.status in counts) counts[app.status as StatusKey]++;
     });
-
     return Object.entries(counts)
       .map(([status, value]) => ({
         name: status.charAt(0).toUpperCase() + status.slice(1),
+        status: status as StatusKey,
         value,
-        color: STATUS_COLORS[status],
+        color: STATUS_COLORS[status as StatusKey],
       }))
       .filter((item) => item.value > 0);
   }, [applications]);
 
   // =========================
-  // Monthly Trend Data
+  // Daily Trend Data
   // =========================
   const trendData = useMemo(() => {
-    const monthMap = new Map<string, number>();
-
+    const dayMap = new Map<string, number>();
     applications.forEach((app) => {
-      const rawDate =
-        (app as any).createdAt || (app as any).appliedAt || (app as any).date;
-
+      const rawDate = app.created_at || app.applied_date;
       if (!rawDate) return;
-
       const date = new Date(rawDate);
-
       if (Number.isNaN(date.getTime())) return;
 
-      const monthKey = new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        year: "numeric",
-      }).format(date);
-
-      monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
+      const dayKey = date.toISOString().slice(0, 10);
+      dayMap.set(dayKey, (dayMap.get(dayKey) || 0) + 1);
     });
-
-    return Array.from(monthMap, ([month, count]) => ({
-      month,
+    return Array.from(dayMap, ([dayKey, count]) => ({
+      dayKey,
+      day: new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+      }).format(new Date(`${dayKey}T00:00:00`)),
       count,
-    }))
-      .sort((a, b) => {
-        const dateA = new Date(`1 ${a.month}`);
-        const dateB = new Date(`1 ${b.month}`);
-        return dateA.getTime() - dateB.getTime();
-      });
+    })).sort((a, b) => a.dayKey.localeCompare(b.dayKey));
   }, [applications]);
 
   const hasAnalyticsData =
     applications.length > 0 && (statusData.length > 0 || trendData.length > 0);
 
   // =========================
-  // Custom Tooltip
+  // Donut interaction
   // =========================
-  const PieTooltip = ({
+  const handleSliceClick = useCallback((entry: { status: StatusKey }) => {
+    setActiveStatus((prev) => (prev === entry.status ? null : entry.status));
+  }, []);
+
+  const handleBackgroundClick = useCallback(() => {
+    setActiveStatus(null);
+  }, []);
+
+  /** Returns whether a stat card should be highlighted given the active status */
+  const getCardHighlight = (cardKey: string): "active" | "dim" | "none" => {
+    if (!activeStatus) return "none";
+    if (cardKey === "total") return "none"; // total always neutral
+    const linked = CARD_STATUS_MAP[cardKey];
+    if (!linked) return "dim";
+    return linked.includes(activeStatus) ? "active" : "dim";
+  };
+
+  // =========================
+  // Custom Tooltips
+  // =========================
+  const PieTooltipContent = ({
     active,
     payload,
   }: {
@@ -132,10 +150,8 @@ export default function StatsBar({ applications }: StatsBarProps) {
     payload?: any[];
   }) => {
     if (!active || !payload?.length) return null;
-
     const item = payload[0];
     const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
-
     return (
       <div className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm shadow-lg">
         <p className="font-medium">{item.name}</p>
@@ -145,7 +161,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
     );
   };
 
-  const LineTooltip = ({
+  const LineTooltipContent = ({
     active,
     payload,
     label,
@@ -155,7 +171,6 @@ export default function StatsBar({ applications }: StatsBarProps) {
     label?: string;
   }) => {
     if (!active || !payload?.length) return null;
-
     return (
       <div className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm shadow-lg">
         <p className="font-medium">{label}</p>
@@ -164,13 +179,38 @@ export default function StatsBar({ applications }: StatsBarProps) {
     );
   };
 
+  // =========================
+  // Card style helper
+  // =========================
+  const cardStyle = (
+    highlight: "active" | "dim" | "none",
+    accentColor?: string,
+  ) => {
+    const base =
+      "rounded-xl border bg-ink-900/60 p-4 backdrop-blur-sm transition-all duration-300";
+
+    if (highlight === "active") {
+      return `${base} border-2 shadow-lg scale-[1.03]`;
+    }
+    if (highlight === "dim") {
+      return `${base} border-ink-700 opacity-40`;
+    }
+    return `${base} border-ink-700`;
+  };
+
+  const cardBorderColor = (
+    highlight: "active" | "dim" | "none",
+    color: string,
+  ) => (highlight === "active" ? color : undefined);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onClick={handleBackgroundClick}>
       {/* ================================================= */}
-      {/* Stats Cards */}
+      {/* Stats Cards                                        */}
       {/* ================================================= */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4 backdrop-blur-sm">
+        {/* Total — never dims, never highlights */}
+        <div className={cardStyle("none")}>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm text-gray-400">Total</span>
             <BarChart2 size={18} className="text-blue-400" />
@@ -178,31 +218,96 @@ export default function StatsBar({ applications }: StatsBarProps) {
           <p className="text-2xl font-bold">{total}</p>
         </div>
 
-        <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4 backdrop-blur-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm text-gray-400">Active</span>
-            <TrendingUp size={18} className="text-cyan-400" />
-          </div>
-          <p className="text-2xl font-bold">{active}</p>
-        </div>
+        {/* Active */}
+        {(() => {
+          const h = getCardHighlight("active");
+          const color = STATUS_COLORS[activeStatus ?? "applied"];
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">Active</span>
+                <TrendingUp
+                  size={18}
+                  className={h === "active" ? "text-cyan-300" : "text-cyan-400"}
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {active}
+              </p>
+            </div>
+          );
+        })()}
 
-        <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4 backdrop-blur-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm text-gray-400">Interviews</span>
-            <MessageSquare size={18} className="text-amber-400" />
-          </div>
-          <p className="text-2xl font-bold">{interviews}</p>
-        </div>
+        {/* Interviews */}
+        {(() => {
+          const h = getCardHighlight("interviews");
+          const color = STATUS_COLORS.interview;
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">Interviews</span>
+                <MessageSquare
+                  size={18}
+                  className={
+                    h === "active" ? "text-amber-300" : "text-amber-400"
+                  }
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {interviews}
+              </p>
+            </div>
+          );
+        })()}
 
-        <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4 backdrop-blur-sm">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm text-gray-400">Offers</span>
-            <Trophy size={18} className="text-emerald-400" />
-          </div>
-          <p className="text-2xl font-bold">{offers}</p>
-        </div>
+        {/* Offers */}
+        {(() => {
+          const h = getCardHighlight("offers");
+          const color = STATUS_COLORS.offer;
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">Offers</span>
+                <Trophy
+                  size={18}
+                  className={
+                    h === "active" ? "text-emerald-300" : "text-emerald-400"
+                  }
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {offers}
+              </p>
+            </div>
+          );
+        })()}
 
-        <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-4 backdrop-blur-sm">
+        {/* Response Rate — no direct status link, stays neutral */}
+        <div className={cardStyle("none")}>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm text-gray-400">Response Rate</span>
             <CheckCircle size={18} className="text-green-400" />
@@ -212,11 +317,13 @@ export default function StatsBar({ applications }: StatsBarProps) {
       </div>
 
       {/* ================================================= */}
-      {/* Analytics Section */}
+      {/* Analytics Section                                  */}
       {/* ================================================= */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold">Application Analytics</h2>
+          <h2 className="text-xl font-semibold font-display">
+            Application Analytics
+          </h2>
           <p className="text-sm text-gray-400">
             Track your job search performance
           </p>
@@ -232,43 +339,38 @@ export default function StatsBar({ applications }: StatsBarProps) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
             {/* ========================================= */}
-            {/* Application Trend */}
+            {/* Application Trend                         */}
             {/* ========================================= */}
-            <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-5 backdrop-blur-sm lg:col-span-2">
+            <div className="min-w-0 rounded-xl border border-ink-700 bg-ink-900/60 p-5 backdrop-blur-sm lg:col-span-2">
               <div className="mb-4">
                 <h3 className="font-semibold text-white">Application Trend</h3>
                 <p className="text-sm text-gray-400">
-                  Applications submitted over time
+                  Applications submitted by day
                 </p>
               </div>
-
-              <div className="h-85">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-80 min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <LineChart data={trendData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke="#374151"
                       opacity={0.4}
                     />
-
                     <XAxis
-                      dataKey="month"
+                      dataKey="day"
                       tick={{ fill: "#9CA3AF", fontSize: 12 }}
                       axisLine={{ stroke: "#4B5563" }}
                       tickLine={{ stroke: "#4B5563" }}
                     />
-
                     <YAxis
                       allowDecimals={false}
                       tick={{ fill: "#9CA3AF", fontSize: 12 }}
                       axisLine={{ stroke: "#4B5563" }}
                       tickLine={{ stroke: "#4B5563" }}
                     />
-
-                    <Tooltip content={<LineTooltip />} />
-
+                    <Tooltip content={<LineTooltipContent />} />
                     <Area
                       type="monotone"
                       dataKey="count"
@@ -276,7 +378,6 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       fill="#3B82F6"
                       fillOpacity={0.08}
                     />
-
                     <Line
                       type="monotone"
                       dataKey="count"
@@ -291,10 +392,13 @@ export default function StatsBar({ applications }: StatsBarProps) {
             </div>
 
             {/* ========================================= */}
-            {/* Status Distribution */}
+            {/* Status Distribution (Donut)               */}
             {/* ========================================= */}
-            <div className="rounded-xl border border-ink-700 bg-ink-900/60 p-5 backdrop-blur-sm">
-              <div className="mb-4">
+            <div
+              className="min-w-0 rounded-xl border border-ink-700 bg-ink-900/60 p-5 backdrop-blur-sm"
+              onClick={(e) => e.stopPropagation()} // prevent bubble to background handler
+            >
+              <div className="mb-2">
                 <h3 className="font-semibold text-white">
                   Status Distribution
                 </h3>
@@ -303,8 +407,15 @@ export default function StatsBar({ applications }: StatsBarProps) {
                 </p>
               </div>
 
-              <div className="h-85">
-                <ResponsiveContainer width="100%" height="100%">
+              {/* Hint text */}
+              <p className="mb-2 text-xs text-gray-500 italic">
+                {activeStatus
+                  ? `Showing: ${activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)} — click again to clear`
+                  : "Click a slice to highlight cards"}
+              </p>
+
+              <div className="h-80 min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <PieChart>
                     <Pie
                       data={statusData}
@@ -313,40 +424,74 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       innerRadius={70}
                       outerRadius={105}
                       paddingAngle={3}
+                      onClick={(entry) => handleSliceClick(entry as any)}
+                      style={{ cursor: "pointer" }}
                     >
-                      {statusData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
+                      {statusData.map((entry) => {
+                        const isActive = activeStatus === entry.status;
+                        const isDimmed = activeStatus !== null && !isActive;
+                        return (
+                          <Cell
+                            key={entry.name}
+                            fill={entry.color}
+                            opacity={isDimmed ? 0.25 : 1}
+                            stroke={isActive ? "#fff" : "transparent"}
+                            strokeWidth={isActive ? 2 : 0}
+                            // Recharts doesn't support scale per-cell, so we use
+                            // outerRadius prop on Pie instead via a wrapper trick.
+                          />
+                        );
+                      })}
                     </Pie>
 
-                    <Tooltip content={<PieTooltip />} />
+                    <Tooltip content={<PieTooltipContent />} />
 
                     <Legend
                       verticalAlign="bottom"
-                      wrapperStyle={{
-                        fontSize: "12px",
-                      }}
+                      wrapperStyle={{ fontSize: "12px" }}
+                      formatter={(value, entry: any) => (
+                        <span
+                          style={{
+                            opacity:
+                              activeStatus &&
+                              entry.payload.status !== activeStatus
+                                ? 0.35
+                                : 1,
+                            transition: "opacity 0.2s",
+                          }}
+                        >
+                          {value}
+                        </span>
+                      )}
                     />
 
-                    {/* Center Label */}
+                    {/* Center label — updates to reflect active slice */}
                     <text
                       x="50%"
-                      y="48%"
+                      y="45%"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="fill-white text-xl font-bold"
+                      fill="#fff"
+                      fontSize={22}
+                      fontWeight={700}
                     >
-                      {total}
+                      {activeStatus
+                        ? (statusData.find((d) => d.status === activeStatus)
+                            ?.value ?? total)
+                        : total}
                     </text>
-
                     <text
                       x="50%"
-                      y="58%"
+                      y="56%"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="fill-gray-400 text-xs"
+                      fill="#9CA3AF"
+                      fontSize={11}
                     >
-                      Total Apps
+                      {activeStatus
+                        ? activeStatus.charAt(0).toUpperCase() +
+                          activeStatus.slice(1)
+                        : "Total Apps"}
                     </text>
                   </PieChart>
                 </ResponsiveContainer>
