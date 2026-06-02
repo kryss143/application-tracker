@@ -21,7 +21,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Area,
 } from "recharts";
 
 interface StatsBarProps {
@@ -45,6 +44,20 @@ const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
   offers: ["offer"],
   rejected: ["rejected"],
 };
+
+type TrendStatusKey = Exclude<StatusKey, "applied">;
+
+type TrendDatum = {
+  dayKey: string;
+  day: string;
+} & Record<TrendStatusKey, number>;
+
+const TREND_STATUS_KEYS: TrendStatusKey[] = [
+  "wishlist",
+  "interview",
+  "offer",
+  "rejected",
+];
 
 export default function StatsBar({ applications }: StatsBarProps) {
   const [activeStatus, setActiveStatus] = useState<StatusKey | null>(null);
@@ -96,24 +109,35 @@ export default function StatsBar({ applications }: StatsBarProps) {
   // Daily Trend Data
   // =========================
   const trendData = useMemo(() => {
-    const dayMap = new Map<string, number>();
+    const dayMap = new Map<string, TrendDatum>();
     applications.forEach((app) => {
       const rawDate = app.created_at || app.applied_date;
       if (!rawDate) return;
       const date = new Date(rawDate);
       if (Number.isNaN(date.getTime())) return;
+      if (!TREND_STATUS_KEYS.includes(app.status as TrendStatusKey)) return;
 
       const dayKey = date.toISOString().slice(0, 10);
-      dayMap.set(dayKey, (dayMap.get(dayKey) || 0) + 1);
+      const day =
+        dayMap.get(dayKey) ??
+        ({
+          dayKey,
+          day: new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+          }).format(new Date(`${dayKey}T00:00:00`)),
+          wishlist: 0,
+          interview: 0,
+          offer: 0,
+          rejected: 0,
+        } satisfies TrendDatum);
+
+      day[app.status as TrendStatusKey] += 1;
+      dayMap.set(dayKey, day);
     });
-    return Array.from(dayMap, ([dayKey, count]) => ({
-      dayKey,
-      day: new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-      }).format(new Date(`${dayKey}T00:00:00`)),
-      count,
-    })).sort((a, b) => a.dayKey.localeCompare(b.dayKey));
+    return Array.from(dayMap.values()).sort((a, b) =>
+      a.dayKey.localeCompare(b.dayKey),
+    );
   }, [applications]);
 
   const hasAnalyticsData =
@@ -174,7 +198,19 @@ export default function StatsBar({ applications }: StatsBarProps) {
     return (
       <div className="rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm shadow-lg">
         <p className="font-medium">{label}</p>
-        <p>{payload[0].value} applications</p>
+        <div className="mt-2 space-y-1">
+          {payload.map((item) => (
+            <p key={item.dataKey} className="flex items-center gap-2">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span>
+                {item.name}: {item.value}
+              </span>
+            </p>
+          ))}
+        </div>
       </div>
     );
   };
@@ -371,17 +407,42 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       tickLine={{ stroke: "#4B5563" }}
                     />
                     <Tooltip content={<LineTooltipContent />} />
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke="none"
-                      fill="#3B82F6"
-                      fillOpacity={0.08}
+                    <Legend
+                      verticalAlign="top"
+                      wrapperStyle={{ fontSize: "12px", paddingBottom: "12px" }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="count"
-                      stroke="#3B82F6"
+                      dataKey="wishlist"
+                      name="Wishlist"
+                      stroke={STATUS_COLORS.wishlist}
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="interview"
+                      name="Interview"
+                      stroke={STATUS_COLORS.interview}
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="offer"
+                      name="Offer"
+                      stroke={STATUS_COLORS.offer}
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="rejected"
+                      name="Rejected"
+                      stroke={STATUS_COLORS.rejected}
                       strokeWidth={3}
                       dot={{ r: 4 }}
                       activeDot={{ r: 6 }}
