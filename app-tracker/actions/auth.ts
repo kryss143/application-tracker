@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ActionResult } from "@/lib/types";
 
@@ -37,12 +36,12 @@ export async function signup(formData: FormData): Promise<ActionResult> {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  return { success: true };
 }
 
 export async function signout(): Promise<void> {
   const supabase = createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/login");
+  console.log("User signed out");
 }
