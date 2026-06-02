@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+// @ts-ignore: Allow importing global CSS without type declarations in this Next.js app
 import "./globals.css";
 
 export const metadata: Metadata = {
