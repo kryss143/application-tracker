@@ -7,18 +7,15 @@ import { ActionResult } from "@/lib/types";
 
 export async function login(formData: FormData): Promise<ActionResult> {
   const supabase = createClient();
-
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    return { success: false, error: error.message };
-  }
+  if (error) return { success: false, error: error.message };
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  return { success: true }; // ← no redirect()
 }
 
 export async function signup(formData: FormData): Promise<ActionResult> {
