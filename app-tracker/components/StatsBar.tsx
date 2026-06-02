@@ -107,11 +107,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
       monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
     });
 
-    return [...monthMap.entries()]
-      .map(([month, count]) => ({
-        month,
-        count,
-      }))
+    return Array.from(monthMap, ([month, count]) => ({
+      month,
+      count,
+    }))
       .sort((a, b) => {
         const dateA = new Date(`1 ${a.month}`);
         const dateB = new Date(`1 ${b.month}`);
