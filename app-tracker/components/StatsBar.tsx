@@ -45,7 +45,7 @@ const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
   rejected: ["rejected"],
 };
 
-type TrendStatusKey = Exclude<StatusKey, "applied">;
+type TrendStatusKey = StatusKey;
 
 type TrendDatum = {
   dayKey: string;
@@ -54,6 +54,7 @@ type TrendDatum = {
 
 const TREND_STATUS_KEYS: TrendStatusKey[] = [
   "wishlist",
+  "applied",
   "interview",
   "offer",
   "rejected",
@@ -127,6 +128,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
             day: "numeric",
           }).format(new Date(`${dayKey}T00:00:00`)),
           wishlist: 0,
+          applied: 0,
           interview: 0,
           offer: 0,
           rejected: 0,
@@ -416,6 +418,15 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       dataKey="wishlist"
                       name="Wishlist"
                       stroke={STATUS_COLORS.wishlist}
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="applied"
+                      name="Applied"
+                      stroke={STATUS_COLORS.applied}
                       strokeWidth={3}
                       dot={{ r: 4 }}
                       activeDot={{ r: 6 }}
