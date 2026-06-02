@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { login } from "@/actions/auth";
+import { useRouter } from "next/navigation";
 import { Briefcase, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,8 +22,9 @@ export default function LoginPage() {
       if (!result.success) {
         setError(result.error ?? "Login failed");
         setLoading(false);
+        return;
       }
-      // leave loading=true on success — redirect() is in flight
+      router.push("/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
