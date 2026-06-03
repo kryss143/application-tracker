@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Application, ApplicationStatus, STATUS_ORDER, STATUS_CONFIG } from "@/lib/types";
+import {
+  Application,
+  ApplicationStatus,
+  STATUS_ORDER,
+  STATUS_CONFIG,
+} from "@/lib/types";
 import ApplicationCard from "./ApplicationCard";
 import ApplicationForm from "./ApplicationForm";
 import { Search, SlidersHorizontal, Plus, Inbox } from "lucide-react";
@@ -11,10 +16,15 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
-  const [applications, setApplications] = useState<Application[]>(initialApplications);
+  const [applications, setApplications] =
+    useState<Application[]>(initialApplications);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<ApplicationStatus | "all">("all");
-  const [sortBy, setSortBy] = useState<"created_at" | "applied_date">("created_at");
+  const [filterStatus, setFilterStatus] = useState<ApplicationStatus | "all">(
+    "all",
+  );
+  const [sortBy, setSortBy] = useState<"created_at" | "applied_date">(
+    "created_at",
+  );
   const [showAdd, setShowAdd] = useState(false);
   const [addStatus, setAddStatus] = useState<ApplicationStatus>("wishlist");
 
@@ -118,7 +128,9 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
               {/* Column header */}
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full bg-current ${config.color}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full bg-current ${config.color}`}
+                  />
                   <span className="text-sm font-medium text-ink-200">
                     {config.label}
                   </span>
@@ -139,11 +151,14 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
 
               {/* Column body */}
               <div
-                className={`min-h-[200px] rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20`}
+                className={`min-h-50 rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20`}
               >
                 {colApps.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-32 text-center">
-                    <Inbox className="w-6 h-6 text-ink-600 mb-2" strokeWidth={1.5} />
+                    <Inbox
+                      className="w-6 h-6 text-ink-600 mb-2"
+                      strokeWidth={1.5}
+                    />
                     <p className="text-xs text-ink-600">No applications yet</p>
                     <button
                       onClick={() => {

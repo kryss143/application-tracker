@@ -10,7 +10,7 @@ interface NavbarProps {
 export default function Navbar({ userEmail }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-ink-900/80 backdrop-blur-xl border-b border-ink-700/60">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-400 mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-ink-800 border border-ink-600 flex items-center justify-center">
