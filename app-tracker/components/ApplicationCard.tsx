@@ -34,25 +34,14 @@ export default function ApplicationCard({
   const config = STATUS_CONFIG[application.status];
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return null;
-    const MONTH_ABBREV = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    const dt = new Date(dateStr);
-    return `${MONTH_ABBREV[dt.getMonth()]} ${dt.getDate()}`;
-  };
+    if (!dateStr) return "";
 
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(dateStr));
+  };
   return (
     <>
       <div
@@ -155,7 +144,7 @@ export default function ApplicationCard({
             {config.label}
           </span>
           <span className="text-ink-600 text-xs font-mono">
-            {formatDate(application.created_at) ?? ""}
+            {application.created_at}
           </span>
         </div>
       </div>
