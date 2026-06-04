@@ -86,11 +86,12 @@ export default function ApplicationForm({
       return;
     }
 
-    const idForOptimistic =
-      optimisticId ??
-      (typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `temp-${Date.now()}`);
+    const idForOptimistic = isEdit
+      ? application!.id
+      : (optimisticId ??
+        (typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `temp-${Date.now()}`));
 
     onSave(buildOptimistic(formData, application, idForOptimistic));
     onClose();
