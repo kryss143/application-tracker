@@ -42,6 +42,7 @@ export default function ApplicationCard({
       timeZone: "UTC",
     }).format(new Date(dateStr));
   };
+
   return (
     <>
       <div

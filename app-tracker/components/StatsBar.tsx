@@ -62,6 +62,7 @@ const TREND_STATUS_KEYS: TrendStatusKey[] = [
 
 export default function StatsBar({ applications }: StatsBarProps) {
   const [activeStatus, setActiveStatus] = useState<StatusKey | null>(null);
+  const [hoverStatus, setHoverStatus] = useState<StatusKey | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -170,6 +171,17 @@ export default function StatsBar({ applications }: StatsBarProps) {
   // =========================
   const handleSliceClick = useCallback((entry: { status: StatusKey }) => {
     setActiveStatus((prev) => (prev === entry.status ? null : entry.status));
+  }, []);
+
+  const handleSliceHover = useCallback(
+    (entry: { status: StatusKey } | null) => {
+      setHoverStatus(entry?.status ?? null);
+    },
+    [],
+  );
+
+  const handleSliceLeave = useCallback(() => {
+    setHoverStatus(null);
   }, []);
 
   const handleBackgroundClick = useCallback(() => {
@@ -508,7 +520,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
               <p className="mb-2 text-xs text-gray-500 italic">
                 {activeStatus
                   ? `Showing: ${activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1)} — click again to clear`
-                  : "Click a slice to highlight cards"}
+                  : hoverStatus
+                    ? `Hovering: ${hoverStatus.charAt(0).toUpperCase() + hoverStatus.slice(1)} — click to pin`
+                    : "Click a slice to highlight cards"}
               </p>
 
               <div className="h-80 min-w-0">
@@ -523,20 +537,38 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         outerRadius={105}
                         paddingAngle={3}
                         onClick={(entry) => handleSliceClick(entry as any)}
+                        onMouseEnter={(entry) => handleSliceHover(entry as any)}
+                        onMouseLeave={handleSliceLeave}
                         style={{ cursor: "pointer" }}
                       >
                         {statusData.map((entry) => {
                           const isActive = activeStatus === entry.status;
-                          const isDimmed = activeStatus !== null && !isActive;
+                          const isHovered = hoverStatus === entry.status;
+                          const isDimmed =
+                            (activeStatus ?? hoverStatus) !== null &&
+                            !(isActive || isHovered);
                           return (
                             <Cell
                               key={entry.name}
                               fill={entry.color}
                               opacity={isDimmed ? 0.25 : 1}
-                              stroke={isActive ? "#fff" : "transparent"}
-                              strokeWidth={isActive ? 2 : 0}
-                              // Recharts doesn't support scale per-cell, so we use
-                              // outerRadius prop on Pie instead via a wrapper trick.
+                              stroke={
+                                isActive || isHovered ? "#fff" : "transparent"
+                              }
+                              strokeWidth={isActive || isHovered ? 2 : 0}
+                              tabIndex={0}
+                              role="button"
+                              aria-label={`${entry.name}: ${entry.value} applications`}
+                              onFocus={() =>
+                                handleSliceHover({ status: entry.status })
+                              }
+                              onBlur={() => handleSliceLeave()}
+                              onKeyDown={(e: any) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleSliceClick({ status: entry.status });
+                                }
+                              }}
                             />
                           );
                         })}
@@ -551,8 +583,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           <span
                             style={{
                               opacity:
-                                activeStatus &&
-                                entry.payload.status !== activeStatus
+                                (activeStatus ?? hoverStatus) &&
+                                entry.payload.status !==
+                                  (activeStatus ?? hoverStatus)
                                   ? 0.35
                                   : 1,
                               transition: "opacity 0.2s",
@@ -563,7 +596,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         )}
                       />
 
-                      {/* Center label — updates to reflect active slice */}
+                      {/* Center label — updates to reflect hovered/active slice */}
                       <text
                         x="50%"
                         y="45%"
@@ -573,9 +606,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         fontSize={22}
                         fontWeight={700}
                       >
-                        {activeStatus
-                          ? (statusData.find((d) => d.status === activeStatus)
-                              ?.value ?? total)
+                        {(activeStatus ?? hoverStatus)
+                          ? (statusData.find(
+                              (d) => d.status === (activeStatus ?? hoverStatus),
+                            )?.value ?? total)
                           : total}
                       </text>
                       <text
@@ -586,9 +620,11 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         fill="#9CA3AF"
                         fontSize={11}
                       >
-                        {activeStatus
-                          ? activeStatus.charAt(0).toUpperCase() +
-                            activeStatus.slice(1)
+                        {activeStatus && hoverStatus
+                          ? (activeStatus && hoverStatus)
+                              .charAt(0)
+                              .toUpperCase() +
+                            (activeStatus && hoverStatus).slice(1)
                           : "Total Apps"}
                       </text>
                     </PieChart>
