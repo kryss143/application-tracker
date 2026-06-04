@@ -144,7 +144,7 @@ export default function ApplicationCard({
             {config.label}
           </span>
           <span className="text-ink-600 text-xs font-mono">
-            {application.created_at}
+            {formatDate(application.created_at)}
           </span>
         </div>
       </div>
