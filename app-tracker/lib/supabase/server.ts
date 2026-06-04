@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { fetchWithTimeoutAndRetry } from "../fetch";
 
 export function createClient() {
   const cookieStore = cookies();
@@ -11,16 +12,27 @@ export function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options?: Record<string, unknown>;
+          }[],
+        ) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+              cookieStore.set(
+                name,
+                value,
+                options as Parameters<typeof cookieStore.set>[2],
+              ),
             );
           } catch {
             // Server Component — cookies can't be set, middleware handles it
           }
         },
       },
-    }
+      fetch: fetchWithTimeoutAndRetry,
+    },
   );
 }
