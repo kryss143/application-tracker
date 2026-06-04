@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Application } from "@/lib/types";
 import {
   BarChart2,
@@ -62,6 +62,11 @@ const TREND_STATUS_KEYS: TrendStatusKey[] = [
 
 export default function StatsBar({ applications }: StatsBarProps) {
   const [activeStatus, setActiveStatus] = useState<StatusKey | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // =========================
   // KPI Metrics
@@ -404,77 +409,82 @@ export default function StatsBar({ applications }: StatsBarProps) {
                 </p>
               </div>
               <div className="h-80 min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <LineChart data={trendData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#374151"
-                      opacity={0.4}
-                    />
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                      axisLine={{ stroke: "#4B5563" }}
-                      tickLine={{ stroke: "#4B5563" }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                      axisLine={{ stroke: "#4B5563" }}
-                      tickLine={{ stroke: "#4B5563" }}
-                    />
-                    <Tooltip content={<LineTooltipContent />} />
-                    <Legend
-                      verticalAlign="top"
-                      wrapperStyle={{ fontSize: "12px", paddingBottom: "12px" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="wishlist"
-                      name="Wishlist"
-                      stroke={STATUS_COLORS.wishlist}
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="applied"
-                      name="Applied"
-                      stroke={STATUS_COLORS.applied}
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="interview"
-                      name="Interview"
-                      stroke={STATUS_COLORS.interview}
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="offer"
-                      name="Offer"
-                      stroke={STATUS_COLORS.offer}
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="rejected"
-                      name="Rejected"
-                      stroke={STATUS_COLORS.rejected}
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {mounted && (
+                  <ResponsiveContainer width="100%" height={320} minWidth={0}>
+                    <LineChart data={trendData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#374151"
+                        opacity={0.4}
+                      />
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                        axisLine={{ stroke: "#4B5563" }}
+                        tickLine={{ stroke: "#4B5563" }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                        axisLine={{ stroke: "#4B5563" }}
+                        tickLine={{ stroke: "#4B5563" }}
+                      />
+                      <Tooltip content={<LineTooltipContent />} />
+                      <Legend
+                        verticalAlign="top"
+                        wrapperStyle={{
+                          fontSize: "12px",
+                          paddingBottom: "12px",
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="wishlist"
+                        name="Wishlist"
+                        stroke={STATUS_COLORS.wishlist}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="applied"
+                        name="Applied"
+                        stroke={STATUS_COLORS.applied}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="interview"
+                        name="Interview"
+                        stroke={STATUS_COLORS.interview}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="offer"
+                        name="Offer"
+                        stroke={STATUS_COLORS.offer}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="rejected"
+                        name="Rejected"
+                        stroke={STATUS_COLORS.rejected}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
 
@@ -502,86 +512,88 @@ export default function StatsBar({ applications }: StatsBarProps) {
               </p>
 
               <div className="h-80 min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <PieChart>
-                    <Pie
-                      data={statusData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={70}
-                      outerRadius={105}
-                      paddingAngle={3}
-                      onClick={(entry) => handleSliceClick(entry as any)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {statusData.map((entry) => {
-                        const isActive = activeStatus === entry.status;
-                        const isDimmed = activeStatus !== null && !isActive;
-                        return (
-                          <Cell
-                            key={entry.name}
-                            fill={entry.color}
-                            opacity={isDimmed ? 0.25 : 1}
-                            stroke={isActive ? "#fff" : "transparent"}
-                            strokeWidth={isActive ? 2 : 0}
-                            // Recharts doesn't support scale per-cell, so we use
-                            // outerRadius prop on Pie instead via a wrapper trick.
-                          />
-                        );
-                      })}
-                    </Pie>
+                {mounted && (
+                  <ResponsiveContainer width="100%" height={320} minWidth={0}>
+                    <PieChart>
+                      <Pie
+                        data={statusData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={70}
+                        outerRadius={105}
+                        paddingAngle={3}
+                        onClick={(entry) => handleSliceClick(entry as any)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {statusData.map((entry) => {
+                          const isActive = activeStatus === entry.status;
+                          const isDimmed = activeStatus !== null && !isActive;
+                          return (
+                            <Cell
+                              key={entry.name}
+                              fill={entry.color}
+                              opacity={isDimmed ? 0.25 : 1}
+                              stroke={isActive ? "#fff" : "transparent"}
+                              strokeWidth={isActive ? 2 : 0}
+                              // Recharts doesn't support scale per-cell, so we use
+                              // outerRadius prop on Pie instead via a wrapper trick.
+                            />
+                          );
+                        })}
+                      </Pie>
 
-                    <Tooltip content={<PieTooltipContent />} />
+                      <Tooltip content={<PieTooltipContent />} />
 
-                    <Legend
-                      verticalAlign="bottom"
-                      wrapperStyle={{ fontSize: "12px" }}
-                      formatter={(value, entry: any) => (
-                        <span
-                          style={{
-                            opacity:
-                              activeStatus &&
-                              entry.payload.status !== activeStatus
-                                ? 0.35
-                                : 1,
-                            transition: "opacity 0.2s",
-                          }}
-                        >
-                          {value}
-                        </span>
-                      )}
-                    />
+                      <Legend
+                        verticalAlign="bottom"
+                        wrapperStyle={{ fontSize: "12px" }}
+                        formatter={(value, entry: any) => (
+                          <span
+                            style={{
+                              opacity:
+                                activeStatus &&
+                                entry.payload.status !== activeStatus
+                                  ? 0.35
+                                  : 1,
+                              transition: "opacity 0.2s",
+                            }}
+                          >
+                            {value}
+                          </span>
+                        )}
+                      />
 
-                    {/* Center label — updates to reflect active slice */}
-                    <text
-                      x="50%"
-                      y="45%"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill="#fff"
-                      fontSize={22}
-                      fontWeight={700}
-                    >
-                      {activeStatus
-                        ? (statusData.find((d) => d.status === activeStatus)
-                            ?.value ?? total)
-                        : total}
-                    </text>
-                    <text
-                      x="50%"
-                      y="56%"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill="#9CA3AF"
-                      fontSize={11}
-                    >
-                      {activeStatus
-                        ? activeStatus.charAt(0).toUpperCase() +
-                          activeStatus.slice(1)
-                        : "Total Apps"}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+                      {/* Center label — updates to reflect active slice */}
+                      <text
+                        x="50%"
+                        y="45%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#fff"
+                        fontSize={22}
+                        fontWeight={700}
+                      >
+                        {activeStatus
+                          ? (statusData.find((d) => d.status === activeStatus)
+                              ?.value ?? total)
+                          : total}
+                      </text>
+                      <text
+                        x="50%"
+                        y="56%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#9CA3AF"
+                        fontSize={11}
+                      >
+                        {activeStatus
+                          ? activeStatus.charAt(0).toUpperCase() +
+                            activeStatus.slice(1)
+                          : "Total Apps"}
+                      </text>
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
           </div>
