@@ -273,6 +273,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
     color: string,
   ) => (highlight === "active" ? color : undefined);
 
+  const displayStatus = activeStatus ?? hoverStatus;
+  const formatStatusLabel = (s: StatusKey | null | undefined) =>
+    s ? s.charAt(0).toUpperCase() + s.slice(1) : "Total Apps";
+
   return (
     <div className="space-y-6" onClick={handleBackgroundClick}>
       {/* ================================================= */}
@@ -620,12 +624,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         fill="#9CA3AF"
                         fontSize={11}
                       >
-                        {activeStatus && hoverStatus
-                          ? (activeStatus && hoverStatus)
-                              .charAt(0)
-                              .toUpperCase() +
-                            (activeStatus && hoverStatus).slice(1)
-                          : "Total Apps"}
+                        {formatStatusLabel(displayStatus)}
                       </text>
                     </PieChart>
                   </ResponsiveContainer>
