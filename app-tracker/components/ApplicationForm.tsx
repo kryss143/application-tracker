@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Application,
@@ -27,10 +27,11 @@ const LABEL_CLASS =
 function buildOptimistic(
   formData: FormData,
   application?: Application,
+  idOverride?: string,
 ): Application {
   const now = new Date().toISOString();
   return {
-    id: application?.id ?? crypto.randomUUID(),
+    id: idOverride ?? application?.id ?? "",
     user_id: application?.user_id ?? "",
     company_name: formData.get("company_name") as string,
     job_title: formData.get("job_title") as string,
@@ -55,6 +56,17 @@ export default function ApplicationForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [optimisticId, setOptimisticId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!optimisticId) {
+      try {
+        setOptimisticId(crypto.randomUUID());
+      } catch {
+        setOptimisticId(`temp-${Date.now()}`);
+      }
+    }
+  }, [optimisticId]);
 
   const isEdit = !!application;
 
@@ -74,7 +86,13 @@ export default function ApplicationForm({
       return;
     }
 
-    onSave(buildOptimistic(formData, application));
+    const idForOptimistic =
+      optimisticId ??
+      (typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `temp-${Date.now()}`);
+
+    onSave(buildOptimistic(formData, application, idForOptimistic));
     onClose();
     router.refresh();
   }
