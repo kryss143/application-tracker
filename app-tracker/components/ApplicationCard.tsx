@@ -35,10 +35,22 @@ export default function ApplicationCard({
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    const MONTH_ABBREV = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const dt = new Date(dateStr);
+    return `${MONTH_ABBREV[dt.getMonth()]} ${dt.getDate()}`;
   };
 
   return (

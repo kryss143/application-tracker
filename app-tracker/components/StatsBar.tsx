@@ -109,6 +109,21 @@ export default function StatsBar({ applications }: StatsBarProps) {
   // =========================
   // Daily Trend Data
   // =========================
+  const MONTH_ABBREV = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
   const trendData = useMemo(() => {
     const dayMap = new Map<string, TrendDatum>();
     applications.forEach((app) => {
@@ -123,10 +138,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
         dayMap.get(dayKey) ??
         ({
           dayKey,
-          day: new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-          }).format(new Date(`${dayKey}T00:00:00`)),
+          day: (() => {
+            const dt = new Date(`${dayKey}T00:00:00`);
+            return `${MONTH_ABBREV[dt.getMonth()]} ${dt.getDate()}`;
+          })(),
           wishlist: 0,
           applied: 0,
           interview: 0,
