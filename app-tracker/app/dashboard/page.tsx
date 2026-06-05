@@ -22,9 +22,9 @@ export default async function DashboardPage() {
 
       <StatsBar applications={applications} />
 
-      <div className="mt-8">
+      {/* <div className="mt-8">
         <KanbanBoard initialApplications={applications} />
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -176,6 +176,14 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
   return (
     <div>
       {/* Toolbar */}
+      <div className="mb-6">
+        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1">
+          Kanban Board
+        </h2>
+        <p className="text-sm text-gray-400">
+          Track your job search performance
+        </p>
+      </div>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-500" />
