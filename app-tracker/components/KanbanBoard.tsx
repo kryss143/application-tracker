@@ -4,9 +4,11 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import {
   Application,
   ApplicationStatus,
+  ActionResult,
   STATUS_ORDER,
   STATUS_CONFIG,
 } from "@/lib/types";
+import { updateApplicationStatus } from "@/actions/applications";
 import ApplicationCard from "./ApplicationCard";
 import ApplicationForm from "./ApplicationForm";
 import { Search, SlidersHorizontal, Plus, Inbox } from "lucide-react";
@@ -33,6 +35,8 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
   const [dragOverStatus, setDragOverStatus] =
     useState<ApplicationStatus | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
   const dragCounter = useRef<Record<string, number>>({});
 
   const filtered = useMemo(() => {
@@ -122,18 +126,46 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
       const id = e.dataTransfer.getData("text/plain");
       if (!id) return;
 
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === id ? { ...app, status: targetStatus } : app,
-        ),
-      );
-
       setDraggingId(null);
       setDragOverStatus(null);
       setDragOverId(null);
       dragCounter.current = {};
+
+      // Read current status BEFORE updating state — never inside the updater
+      setApplications((prev) => {
+        const app = prev.find((a) => a.id === id);
+        // Same column — no-op
+        if (!app || app.status === targetStatus) return prev;
+        return prev.map((a) =>
+          a.id === id ? { ...a, status: targetStatus } : a,
+        );
+      });
+
+      // Grab previous status from the ref snapshot for rollback
+      const previousStatus = applications.find((a) => a.id === id)?.status;
+      if (!previousStatus || previousStatus === targetStatus) return;
+
+      // Sync to server outside of any setState updater
+      setSyncingId(id);
+      setErrorId(null);
+      updateApplicationStatus(id, targetStatus).then((result: ActionResult) => {
+        setSyncingId(null);
+        if (!result.success) {
+          // Roll back optimistic update
+          setApplications((current) =>
+            current.map((a) =>
+              a.id === id ? { ...a, status: previousStatus } : a,
+            ),
+          );
+          setErrorId(id);
+          setTimeout(
+            () => setErrorId((cur) => (cur === id ? null : cur)),
+            3000,
+          );
+        }
+      });
     },
-    [],
+    [applications],
   );
 
   // Card-level drag enter (for fine-grained reorder within column, optional)
@@ -298,10 +330,14 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
                       onDragEnd={handleDragEnd}
                       onDragEnter={() => handleCardDragEnter(app.id)}
                       className={[
-                        "cursor-grab active:cursor-grabbing transition-transform duration-150",
+                        "relative cursor-grab active:cursor-grabbing transition-all duration-150",
                         draggingId === app.id ? "scale-95" : "",
                         dragOverId === app.id && draggingId !== app.id
                           ? "translate-y-1"
+                          : "",
+                        syncingId === app.id ? "opacity-60" : "",
+                        errorId === app.id
+                          ? "ring-2 ring-red-500/60 rounded-xl"
                           : "",
                       ]
                         .filter(Boolean)
@@ -310,12 +346,43 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
                         animationDelay: `${i * 40}ms`,
                         animationFillMode: "backwards",
                       }}
+                      title={
+                        syncingId === app.id
+                          ? "Saving…"
+                          : errorId === app.id
+                            ? "Failed to save — reverted"
+                            : undefined
+                      }
                     >
                       <ApplicationCard
                         application={app}
                         onUpdate={handleSave}
                         onDelete={handleDelete}
                       />
+                      {/* Syncing spinner overlay */}
+                      {syncingId === app.id && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <svg
+                            className="w-4 h-4 animate-spin text-gold-400"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
