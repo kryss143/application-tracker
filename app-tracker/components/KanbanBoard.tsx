@@ -154,7 +154,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
               <div
                 className={`min-h-50 rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20 ${
                   columnScrollable
-                    ? "max-h-96 overflow-y-auto scrollbar-thin pr-2"
+                    ? "max-h-200 overflow-y-auto scrollbar-thin pr-2"
                     : ""
                 }`}
               >

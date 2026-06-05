@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Application, ApplicationStatus, ActionResult } from "@/lib/types";
 
 export async function getApplications(): Promise<Application[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -27,9 +27,9 @@ export async function getApplications(): Promise<Application[]> {
 }
 
 export async function createApplication(
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -59,9 +59,9 @@ export async function createApplication(
 
 export async function updateApplication(
   id: string,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -94,7 +94,7 @@ export async function updateApplication(
 }
 
 export async function deleteApplication(id: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -115,9 +115,9 @@ export async function deleteApplication(id: string): Promise<ActionResult> {
 
 export async function updateApplicationStatus(
   id: string,
-  status: ApplicationStatus
+  status: ApplicationStatus,
 ): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
