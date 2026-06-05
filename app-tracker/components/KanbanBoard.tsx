@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   Application,
   ApplicationStatus,
@@ -27,6 +27,13 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
   );
   const [showAdd, setShowAdd] = useState(false);
   const [addStatus, setAddStatus] = useState<ApplicationStatus>("wishlist");
+
+  // Drag and drop state
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] =
+    useState<ApplicationStatus | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragCounter = useRef<Record<string, number>>({});
 
   const filtered = useMemo(() => {
     return applications
@@ -58,6 +65,81 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
   function handleDelete(id: string) {
     setApplications((prev) => prev.filter((a) => a.id !== id));
   }
+
+  // ── Drag handlers ──────────────────────────────────────────────────────────
+
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
+    setDraggingId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+    // slight opacity delay so the ghost image renders first
+    setTimeout(() => {
+      const el = document.getElementById(`card-${id}`);
+      if (el) el.style.opacity = "0.4";
+    }, 0);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggingId) {
+      const el = document.getElementById(`card-${draggingId}`);
+      if (el) el.style.opacity = "";
+    }
+    setDraggingId(null);
+    setDragOverStatus(null);
+    setDragOverId(null);
+    dragCounter.current = {};
+  }, [draggingId]);
+
+  // Column-level drag events
+  const handleColumnDragEnter = useCallback(
+    (e: React.DragEvent, status: ApplicationStatus) => {
+      e.preventDefault();
+      dragCounter.current[status] = (dragCounter.current[status] ?? 0) + 1;
+      setDragOverStatus(status);
+    },
+    [],
+  );
+
+  const handleColumnDragLeave = useCallback(
+    (e: React.DragEvent, status: ApplicationStatus) => {
+      dragCounter.current[status] = (dragCounter.current[status] ?? 1) - 1;
+      if (dragCounter.current[status] <= 0) {
+        dragCounter.current[status] = 0;
+        setDragOverStatus((prev) => (prev === status ? null : prev));
+      }
+    },
+    [],
+  );
+
+  const handleColumnDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleColumnDrop = useCallback(
+    (e: React.DragEvent, targetStatus: ApplicationStatus) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain");
+      if (!id) return;
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === id ? { ...app, status: targetStatus } : app,
+        ),
+      );
+
+      setDraggingId(null);
+      setDragOverStatus(null);
+      setDragOverId(null);
+      dragCounter.current = {};
+    },
+    [],
+  );
+
+  // Card-level drag enter (for fine-grained reorder within column, optional)
+  const handleCardDragEnter = useCallback((id: string) => {
+    setDragOverId(id);
+  }, []);
 
   return (
     <div>
@@ -123,6 +205,9 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
           const colApps = filtered.filter((a) => a.status === status);
           const config = STATUS_CONFIG[status];
           const columnScrollable = colApps.length > 5;
+          const isOver = dragOverStatus === status;
+          const isDraggingAcross =
+            draggingId !== null && !colApps.find((a) => a.id === draggingId);
 
           return (
             <div key={status} className="flex-none w-72">
@@ -150,15 +235,43 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
                 </button>
               </div>
 
-              {/* Column body */}
+              {/* Column body — drop target */}
               <div
-                className={`min-h-50 rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20 ${
+                onDragEnter={(e) => handleColumnDragEnter(e, status)}
+                onDragLeave={(e) => handleColumnDragLeave(e, status)}
+                onDragOver={handleColumnDragOver}
+                onDrop={(e) => handleColumnDrop(e, status)}
+                className={[
+                  "min-h-50 rounded-xl p-2 space-y-2.5",
+                  config.bgColor,
+                  "border",
+                  // Highlight drop target
+                  isOver && isDraggingAcross
+                    ? `${config.borderColor}/60 ring-2 ring-inset ring-current ${config.color} scale-[1.01]`
+                    : `${config.borderColor}/20`,
+                  "transition-all duration-150",
                   columnScrollable
                     ? "max-h-175 overflow-y-auto scrollbar-thin pr-2"
-                    : ""
-                }`}
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
-                {colApps.length === 0 ? (
+                {/* Drop hint when dragging into empty or foreign column */}
+                {isOver && isDraggingAcross && (
+                  <div
+                    className={[
+                      "flex items-center justify-center h-14 rounded-lg border-2 border-dashed",
+                      `${config.borderColor}/40 ${config.color}`,
+                      "text-xs font-medium opacity-70",
+                      "transition-all duration-150",
+                    ].join(" ")}
+                  >
+                    Move here
+                  </div>
+                )}
+
+                {colApps.length === 0 && !isOver ? (
                   <div className="flex flex-col items-center justify-center h-32 text-center">
                     <Inbox
                       className="w-6 h-6 text-ink-600 mb-2"
@@ -177,16 +290,33 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
                   </div>
                 ) : (
                   colApps.map((app, i) => (
-                    <ApplicationCard
+                    <div
                       key={app.id}
-                      application={app}
-                      onUpdate={handleSave}
-                      onDelete={handleDelete}
+                      id={`card-${app.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, app.id)}
+                      onDragEnd={handleDragEnd}
+                      onDragEnter={() => handleCardDragEnter(app.id)}
+                      className={[
+                        "cursor-grab active:cursor-grabbing transition-transform duration-150",
+                        draggingId === app.id ? "scale-95" : "",
+                        dragOverId === app.id && draggingId !== app.id
+                          ? "translate-y-1"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                       style={{
                         animationDelay: `${i * 40}ms`,
                         animationFillMode: "backwards",
                       }}
-                    />
+                    >
+                      <ApplicationCard
+                        application={app}
+                        onUpdate={handleSave}
+                        onDelete={handleDelete}
+                      />
+                    </div>
                   ))
                 )}
               </div>
