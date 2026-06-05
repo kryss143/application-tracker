@@ -196,7 +196,7 @@ export default function ApplicationForm({
                   name="salary_range"
                   type="text"
                   defaultValue={application?.salary_range ?? ""}
-                  placeholder="$120k – $160k"
+                  placeholder="₱120k - ₱160k"
                   className={INPUT_CLASS}
                 />
               </div>

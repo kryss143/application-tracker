@@ -122,6 +122,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
         {STATUS_ORDER.map((status) => {
           const colApps = filtered.filter((a) => a.status === status);
           const config = STATUS_CONFIG[status];
+          const columnScrollable = colApps.length > 5;
 
           return (
             <div key={status} className="flex-none w-72">
@@ -151,7 +152,11 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
 
               {/* Column body */}
               <div
-                className={`min-h-50 rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20`}
+                className={`min-h-50 rounded-xl p-2 space-y-2.5 ${config.bgColor} border ${config.borderColor}/20 ${
+                  columnScrollable
+                    ? "max-h-96 overflow-y-auto scrollbar-thin pr-2"
+                    : ""
+                }`}
               >
                 {colApps.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-32 text-center">
