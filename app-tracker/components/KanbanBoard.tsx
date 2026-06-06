@@ -120,7 +120,10 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     e.dataTransfer.dropEffect = "move";
   }, []);
 
-  function handleColumnDrop(e: React.DragEvent, targetStatus: ApplicationStatus) {
+  function handleColumnDrop(
+    e: React.DragEvent,
+    targetStatus: ApplicationStatus,
+  ) {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
@@ -138,7 +141,9 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
       if (!app) return prev;
       previousStatus = app.status;
       if (app.status === targetStatus) return prev; // no-op
-      return prev.map((a) => (a.id === id ? { ...a, status: targetStatus } : a));
+      return prev.map((a) =>
+        a.id === id ? { ...a, status: targetStatus } : a,
+      );
     });
 
     if (!previousStatus || previousStatus === targetStatus) return;
@@ -150,7 +155,11 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
       setSyncingId(null);
       if (!result.success) {
         // Roll back optimistic update
-        setApplications((current) => current.map((a) => (a.id === id ? { ...a, status: previousStatus! } : a)));
+        setApplications((current) =>
+          current.map((a) =>
+            a.id === id ? { ...a, status: previousStatus! } : a,
+          ),
+        );
         setErrorId(id);
         setTimeout(() => setErrorId((cur) => (cur === id ? null : cur)), 3000);
       }
