@@ -7,6 +7,11 @@ import { config } from "dotenv";
 config({ path: ".env.local", override: false });
 config({ path: ".env", override: false });
 
+// Lightweight in-process health-check cache to avoid running a network
+// probe on every request (which causes noticeable latency).
+let _lastHealthCheck = 0;
+const HEALTH_CHECK_TTL = 60_000; // 60s
+
 export async function createClient() {
   const cookieStore = await cookies();
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,23 +38,28 @@ export async function createClient() {
       );
     }
     try {
-      const healthUrl = new URL("/auth/v1/health", SUPABASE_URL).toString();
-      await fetchWithTimeoutAndRetry(healthUrl, { method: "GET" })
-        .then((res) => {
-          if (!res.ok) {
-            console.warn(
-              `Supabase health check returned status ${res.status} for ${SUPABASE_URL}`,
+      const now = Date.now();
+      if (now - _lastHealthCheck > HEALTH_CHECK_TTL) {
+        _lastHealthCheck = now;
+        const healthUrl = new URL("/auth/v1/health", SUPABASE_URL).toString();
+        // Fire-and-forget health check so createClient doesn't block requests.
+        fetchWithTimeoutAndRetry(healthUrl, { method: "GET" })
+          .then((res) => {
+            if (!res.ok) {
+              console.warn(
+                `Supabase health check returned status ${res.status} for ${SUPABASE_URL}`,
+              );
+            } else {
+              console.debug(`Supabase health OK: ${SUPABASE_URL}`);
+            }
+          })
+          .catch((err) => {
+            console.error(
+              `Supabase health check failed for ${SUPABASE_URL}:`,
+              err?.message ?? err,
             );
-          } else {
-            console.debug(`Supabase health OK: ${SUPABASE_URL}`);
-          }
-        })
-        .catch((err) => {
-          console.error(
-            `Supabase health check failed for ${SUPABASE_URL}:`,
-            err?.message ?? err,
-          );
-        });
+          });
+      }
     } catch (err) {
       console.error("Invalid NEXT_PUBLIC_SUPABASE_URL:", err);
     }
