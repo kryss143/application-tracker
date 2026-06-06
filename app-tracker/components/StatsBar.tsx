@@ -95,6 +95,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
   const in_progress = applications.filter(
     (a) => a.status === "in_progress",
   ).length;
+  const rejected = applications.filter((a) => a.status === "rejected").length;
 
   const responseRate =
     nonWishlist > 0
@@ -426,6 +427,34 @@ export default function StatsBar({ applications }: StatsBarProps) {
                 className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
               >
                 {offers}
+              </p>
+            </div>
+          );
+        })()}
+
+        {/* Rejected */}
+        {(() => {
+          const h = getCardHighlight("rejected");
+          const color = STATUS_COLORS.rejected;
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">Rejected</span>
+                <Trophy
+                  size={18}
+                  className={h === "active" ? "text-ruby-300" : "text-ruby-400"}
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {rejected}
               </p>
             </div>
           );
