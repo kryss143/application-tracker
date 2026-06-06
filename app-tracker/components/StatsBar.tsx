@@ -120,9 +120,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
     });
     const formatStatusName = (s: string) =>
       s
-        .split("-")
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
+        .replace(/_/g, " ")
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
 
     return Object.entries(counts)
       .map(([status, value]) => ({
