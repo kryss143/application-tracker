@@ -14,7 +14,7 @@ export default async function KanbanPage() {
 
   if (!user) redirect("/login");
 
-  const applications = await getApplications();
+  const applications = await getApplications(supabase, user.id);
 
   return (
     <>

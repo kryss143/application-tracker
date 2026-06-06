@@ -4,18 +4,25 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Application, ApplicationStatus, ActionResult } from "@/lib/types";
 
-export async function getApplications(): Promise<Application[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function getApplications(
+  supabaseClient?: Awaited<ReturnType<typeof createClient>>,
+  userId?: string,
+): Promise<Application[]> {
+  const supabase = supabaseClient ?? (await createClient());
 
-  if (!user) return [];
+  let uid = userId;
+  if (!uid) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
+    uid = user.id;
+  }
 
   const { data, error } = await supabase
     .from("applications")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", uid)
     .order("created_at", { ascending: false });
 
   if (error) {
