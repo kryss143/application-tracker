@@ -384,14 +384,16 @@ export default function StatsBar({ applications }: StatsBarProps) {
                 <ArrowUp
                   size={18}
                   className={
-                    h === "active" ? "text-amber-300" : "text-amber-400"
+                    h === "active" ? "text-violet-300" : "text-violet-400"
                   }
                 />
               </div>
               <p
                 className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
               >
-                {"in-progress" in CARD_STATUS_MAP.active ? active : 0}
+                {"in-progress" in CARD_STATUS_MAP
+                  ? CARD_STATUS_MAP["in-progress"]
+                  : 0}
               </p>
             </div>
           );
