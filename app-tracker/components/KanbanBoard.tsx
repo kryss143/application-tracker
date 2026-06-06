@@ -120,54 +120,42 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     e.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleColumnDrop = useCallback(
-    (e: React.DragEvent, targetStatus: ApplicationStatus) => {
-      e.preventDefault();
-      const id = e.dataTransfer.getData("text/plain");
-      if (!id) return;
+  function handleColumnDrop(e: React.DragEvent, targetStatus: ApplicationStatus) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id) return;
 
-      setDraggingId(null);
-      setDragOverStatus(null);
-      setDragOverId(null);
-      dragCounter.current = {};
+    setDraggingId(null);
+    setDragOverStatus(null);
+    setDragOverId(null);
+    dragCounter.current = {};
 
-      // Track previous status synchronously from the updater to avoid
-      // reading a possibly stale `applications` closure.
-      let previousStatus: ApplicationStatus | undefined;
-      setApplications((prev) => {
-        const app = prev.find((a) => a.id === id);
-        if (!app) return prev;
-        previousStatus = app.status;
-        if (app.status === targetStatus) return prev; // no-op
-        return prev.map((a) =>
-          a.id === id ? { ...a, status: targetStatus } : a,
-        );
-      });
+    // Track previous status synchronously from the updater to avoid
+    // reading a possibly stale `applications` closure.
+    let previousStatus: ApplicationStatus | undefined;
+    setApplications((prev) => {
+      const app = prev.find((a) => a.id === id);
+      if (!app) return prev;
+      previousStatus = app.status;
+      if (app.status === targetStatus) return prev; // no-op
+      return prev.map((a) => (a.id === id ? { ...a, status: targetStatus } : a));
+    });
 
-      if (!previousStatus || previousStatus === targetStatus) return;
+    if (!previousStatus || previousStatus === targetStatus) return;
 
-      // Sync to server outside of any setState updater
-      setSyncingId(id);
-      setErrorId(null);
-      updateApplicationStatus(id, targetStatus).then((result: ActionResult) => {
-        setSyncingId(null);
-        if (!result.success) {
-          // Roll back optimistic update
-          setApplications((current) =>
-            current.map((a) =>
-              a.id === id ? { ...a, status: previousStatus! } : a,
-            ),
-          );
-          setErrorId(id);
-          setTimeout(
-            () => setErrorId((cur) => (cur === id ? null : cur)),
-            3000,
-          );
-        }
-      });
-    },
-    [],
-  );
+    // Sync to server outside of any setState updater
+    setSyncingId(id);
+    setErrorId(null);
+    updateApplicationStatus(id, targetStatus).then((result: ActionResult) => {
+      setSyncingId(null);
+      if (!result.success) {
+        // Roll back optimistic update
+        setApplications((current) => current.map((a) => (a.id === id ? { ...a, status: previousStatus! } : a)));
+        setErrorId(id);
+        setTimeout(() => setErrorId((cur) => (cur === id ? null : cur)), 3000);
+      }
+    });
+  }
 
   // Card-level drag enter (for fine-grained reorder within column, optional)
   const handleCardDragEnter = useCallback((id: string) => {

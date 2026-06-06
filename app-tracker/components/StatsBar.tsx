@@ -31,7 +31,7 @@ type StatusKey =
   | "wishlist"
   | "applied"
   | "interview"
-  | "inprogress"
+  | "in-progress"
   | "offer"
   | "rejected";
 
@@ -39,14 +39,14 @@ const STATUS_COLORS: Record<StatusKey, string> = {
   wishlist: "#6B7280",
   applied: "#3B82F6",
   interview: "#F59E0B",
-  inprogress: "#8B5CF6",
+  "in-progress": "#8B5CF6",
   offer: "#10B981",
   rejected: "#EF4444",
 };
 
 // Maps each stat card to the status(es) it represents in the donut
 const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
-  active: ["wishlist", "applied", "interview", "inprogress", "offer"],
+  active: ["wishlist", "applied", "interview", "in-progress", "offer"],
   interviews: ["interview"],
   offers: ["offer"],
   rejected: ["rejected"],
@@ -63,7 +63,7 @@ const TREND_STATUS_KEYS: TrendStatusKey[] = [
   "wishlist",
   "applied",
   "interview",
-  "inprogress",
+  "in-progress",
   "offer",
   "rejected",
 ];
@@ -104,16 +104,22 @@ export default function StatsBar({ applications }: StatsBarProps) {
       wishlist: 0,
       applied: 0,
       interview: 0,
-      inprogress: 0,
+      "in-progress": 0,
       offer: 0,
       rejected: 0,
     };
     applications.forEach((app) => {
       if (app.status in counts) counts[app.status as StatusKey]++;
     });
+    const formatStatusName = (s: string) =>
+      s
+        .split("-")
+        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+
     return Object.entries(counts)
       .map(([status, value]) => ({
-        name: status.charAt(0).toUpperCase() + status.slice(1),
+        name: formatStatusName(status),
         status: status as StatusKey,
         value,
         color: STATUS_COLORS[status as StatusKey],
@@ -160,7 +166,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
           wishlist: 0,
           applied: 0,
           interview: 0,
-          inprogress: 0,
+          "in-progress": 0,
           offer: 0,
           rejected: 0,
         } satisfies TrendDatum);
@@ -492,9 +498,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       />
                       <Line
                         type="monotone"
-                        dataKey="inprogress"
+                        dataKey="in-progress"
                         name="In Progress"
-                        stroke={STATUS_COLORS.inprogress}
+                        stroke={STATUS_COLORS["in-progress"]}
                         strokeWidth={3}
                         dot={{ r: 4 }}
                         activeDot={{ r: 6 }}
