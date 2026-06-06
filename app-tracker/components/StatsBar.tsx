@@ -298,7 +298,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
 
   const displayStatus = activeStatus ?? hoverStatus;
   const formatStatusLabel = (s: StatusKey | null | undefined) =>
-    s ? s.charAt(0).toUpperCase() + s.slice(1) : "Total Apps";
+    s
+      ? s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Total Apps";
 
   return (
     <div className="space-y-6" onClick={handleBackgroundClick}>
