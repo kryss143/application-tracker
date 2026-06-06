@@ -9,6 +9,7 @@ import {
   Trophy,
   TrendingUp,
   ArrowUp,
+  ThumbsDown,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -446,9 +447,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm text-gray-400">Rejected</span>
-                <Trophy
+                <ThumbsDown
                   size={18}
-                  className={h === "active" ? "text-ruby-300" : "text-ruby-400"}
+                  className={h === "active" ? "text-red-300" : "text-red-400"}
                 />
               </div>
               <p
