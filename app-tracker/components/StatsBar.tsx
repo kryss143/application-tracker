@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Trophy,
   TrendingUp,
+  ArrowUp,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -380,7 +381,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm text-gray-400">In Progress</span>
-                <MessageSquare
+                <ArrowUp
                   size={18}
                   className={
                     h === "active" ? "text-amber-300" : "text-amber-400"
@@ -390,7 +391,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
               <p
                 className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
               >
-                {"in-progress"}
+                {"in-progress" in CARD_STATUS_MAP.active ? active : 0}
               </p>
             </div>
           );
