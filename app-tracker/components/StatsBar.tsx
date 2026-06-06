@@ -366,6 +366,36 @@ export default function StatsBar({ applications }: StatsBarProps) {
           );
         })()}
 
+        {/* In-progress */}
+        {(() => {
+          const h = getCardHighlight("in-progress");
+          const color = STATUS_COLORS["in-progress"];
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">In Progress</span>
+                <MessageSquare
+                  size={18}
+                  className={
+                    h === "active" ? "text-amber-300" : "text-amber-400"
+                  }
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {"in-progress"}
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Offers */}
         {(() => {
           const h = getCardHighlight("offers");
