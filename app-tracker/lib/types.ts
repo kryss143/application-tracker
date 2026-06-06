@@ -95,10 +95,13 @@ export const STATUS_ORDER: ApplicationStatus[] = [
  * Accepts variants like "inprogress", "in progress", "In-Progress" and
  * returns the canonical kebab-case values used throughout the app.
  */
-export function normalizeStatus(s: string | null | undefined): ApplicationStatus {
+export function normalizeStatus(
+  s: string | null | undefined,
+): ApplicationStatus {
   if (!s) return "wishlist";
   const raw = String(s).trim().toLowerCase();
-  if (raw === "inprogress" || raw === "in progress" || raw === "in-progress") return "in-progress";
+  if (raw === "inprogress" || raw === "in progress" || raw === "in-progress")
+    return "in-progress";
   if (raw === "applied") return "applied";
   if (raw === "interview") return "interview";
   if (raw === "offer") return "offer";
