@@ -534,60 +534,34 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           paddingBottom: "12px",
                         }}
                       />
-                      <Line
-                        type="monotone"
-                        dataKey="wishlist"
-                        name="Wishlist"
-                        stroke={STATUS_COLORS.wishlist}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="applied"
-                        name="Applied"
-                        stroke={STATUS_COLORS.applied}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="interview"
-                        name="Interview"
-                        stroke={STATUS_COLORS.interview}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="in_progress"
-                        name="In Progress"
-                        stroke={STATUS_COLORS.in_progress}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="offer"
-                        name="Offer"
-                        stroke={STATUS_COLORS.offer}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="rejected"
-                        name="Rejected"
-                        stroke={STATUS_COLORS.rejected}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
+                      {TREND_STATUS_KEYS.map((key) => {
+                        const isHighlighted =
+                          activeStatus === key || hoverStatus === key;
+                        const isDimmed =
+                          (activeStatus ?? hoverStatus) !== null &&
+                          !isHighlighted;
+                        const NAME_MAP: Record<StatusKey, string> = {
+                          wishlist: "Wishlist",
+                          applied: "Applied",
+                          interview: "Interview",
+                          in_progress: "In Progress",
+                          offer: "Offer",
+                          rejected: "Rejected",
+                        };
+                        return (
+                          <Line
+                            key={key}
+                            type="monotone"
+                            dataKey={key}
+                            name={NAME_MAP[key]}
+                            stroke={STATUS_COLORS[key]}
+                            strokeWidth={isHighlighted ? 4 : 2}
+                            strokeOpacity={isDimmed ? 0.15 : 1}
+                            dot={isHighlighted ? { r: 5 } : false}
+                            activeDot={{ r: 6 }}
+                          />
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 )}
