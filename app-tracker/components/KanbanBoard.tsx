@@ -133,22 +133,16 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     setDragOverId(null);
     dragCounter.current = {};
 
-    // Track previous status synchronously from the updater to avoid
-    // reading a possibly stale `applications` closure.
-    let previousStatus: ApplicationStatus | undefined;
-    setApplications((prev) => {
-      const app = prev.find((a) => a.id === id);
-      if (!app) return prev;
-      previousStatus = app.status;
-      if (app.status === targetStatus) return prev; // no-op
-      return prev.map((a) =>
-        a.id === id ? { ...a, status: targetStatus } : a,
-      );
-    });
-
+    // ✅ Read previousStatus BEFORE calling setApplications
+    const previousStatus = applications.find((a) => a.id === id)?.status;
     if (!previousStatus || previousStatus === targetStatus) return;
 
-    // Sync to server outside of any setState updater
+    // Optimistic update
+    setApplications((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: targetStatus } : a)),
+    );
+
+    // Sync to server
     setSyncingId(id);
     setErrorId(null);
     updateApplicationStatus(id, targetStatus).then((result: ActionResult) => {
@@ -157,7 +151,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
         // Roll back optimistic update
         setApplications((current) =>
           current.map((a) =>
-            a.id === id ? { ...a, status: previousStatus! } : a,
+            a.id === id ? { ...a, status: previousStatus } : a,
           ),
         );
         setErrorId(id);
