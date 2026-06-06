@@ -32,7 +32,7 @@ type StatusKey =
   | "wishlist"
   | "applied"
   | "interview"
-  | "in-progress"
+  | "in_progress"
   | "offer"
   | "rejected";
 
@@ -40,14 +40,14 @@ const STATUS_COLORS: Record<StatusKey, string> = {
   wishlist: "#6B7280",
   applied: "#3B82F6",
   interview: "#F59E0B",
-  "in-progress": "#8B5CF6",
+  in_progress: "#8B5CF6",
   offer: "#10B981",
   rejected: "#EF4444",
 };
 
 // Maps each stat card to the status(es) it represents in the donut
 const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
-  active: ["wishlist", "applied", "interview", "in-progress", "offer"],
+  active: ["wishlist", "applied", "interview", "in_progress", "offer"],
   interviews: ["interview"],
   offers: ["offer"],
   rejected: ["rejected"],
@@ -64,7 +64,7 @@ const TREND_STATUS_KEYS: TrendStatusKey[] = [
   "wishlist",
   "applied",
   "interview",
-  "in-progress",
+  "in_progress",
   "offer",
   "rejected",
 ];
@@ -91,6 +91,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
     (a) => a.status !== "wishlist",
   ).length;
   const applied = applications.filter((a) => a.status === "applied").length;
+  const in_progress = applications.filter(
+    (a) => a.status === "in_progress",
+  ).length;
 
   const responseRate =
     nonWishlist > 0
@@ -105,7 +108,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
       wishlist: 0,
       applied: 0,
       interview: 0,
-      "in-progress": 0,
+      in_progress: 0,
       offer: 0,
       rejected: 0,
     };
@@ -167,7 +170,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
           wishlist: 0,
           applied: 0,
           interview: 0,
-          "in-progress": 0,
+          in_progress: 0,
           offer: 0,
           rejected: 0,
         } satisfies TrendDatum);
@@ -369,8 +372,8 @@ export default function StatsBar({ applications }: StatsBarProps) {
 
         {/* In-progress */}
         {(() => {
-          const h = getCardHighlight("in-progress");
-          const color = STATUS_COLORS["in-progress"];
+          const h = getCardHighlight("in_progress");
+          const color = STATUS_COLORS.in_progress;
           return (
             <div
               className={cardStyle(h)}
@@ -391,9 +394,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
               <p
                 className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
               >
-                {"in-progress" in CARD_STATUS_MAP
-                  ? CARD_STATUS_MAP["in-progress"]
-                  : 0}
+                {in_progress}
               </p>
             </div>
           );
@@ -531,9 +532,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       />
                       <Line
                         type="monotone"
-                        dataKey="in-progress"
+                        dataKey="in_progress"
                         name="In Progress"
-                        stroke={STATUS_COLORS["in-progress"]}
+                        stroke={STATUS_COLORS.in_progress}
                         strokeWidth={3}
                         dot={{ r: 4 }}
                         activeDot={{ r: 6 }}
