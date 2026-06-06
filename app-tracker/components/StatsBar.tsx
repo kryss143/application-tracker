@@ -49,6 +49,7 @@ const STATUS_COLORS: Record<StatusKey, string> = {
 const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
   active: ["wishlist", "applied", "interview", "in_progress", "offer"],
   interviews: ["interview"],
+  in_progress: ["in_progress"],
   offers: ["offer"],
   rejected: ["rejected"],
 };
