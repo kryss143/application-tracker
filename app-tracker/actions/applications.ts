@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Application, ApplicationStatus, ActionResult } from "@/lib/types";
+import {
+  Application,
+  ApplicationStatus,
+  ActionResult,
+  normalizeStatus,
+} from "@/lib/types";
 
 export async function getApplications(
   supabaseClient?: Awaited<ReturnType<typeof createClient>>,
@@ -30,7 +35,11 @@ export async function getApplications(
     return [];
   }
 
-  return data as Application[];
+  // Normalize status values in case the DB contains legacy variants
+  return (data as Application[]).map((row) => ({
+    ...row,
+    status: normalizeStatus((row as any).status),
+  }));
 }
 
 export async function createApplication(
@@ -47,7 +56,7 @@ export async function createApplication(
     user_id: user.id,
     company_name: formData.get("company_name") as string,
     job_title: formData.get("job_title") as string,
-    status: (formData.get("status") as ApplicationStatus) || "wishlist",
+    status: normalizeStatus((formData.get("status") as string) || "wishlist"),
     job_url: (formData.get("job_url") as string) || null,
     location: (formData.get("location") as string) || null,
     salary_range: (formData.get("salary_range") as string) || null,
@@ -78,7 +87,7 @@ export async function updateApplication(
   const payload = {
     company_name: formData.get("company_name") as string,
     job_title: formData.get("job_title") as string,
-    status: formData.get("status") as ApplicationStatus,
+    status: normalizeStatus(formData.get("status") as string | null),
     job_url: (formData.get("job_url") as string) || null,
     location: (formData.get("location") as string) || null,
     salary_range: (formData.get("salary_range") as string) || null,
@@ -131,9 +140,10 @@ export async function updateApplicationStatus(
 
   if (!user) return { success: false, error: "Not authenticated" };
 
+  const normalized = normalizeStatus(status as string);
   const { error } = await supabase
     .from("applications")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status: normalized, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
 

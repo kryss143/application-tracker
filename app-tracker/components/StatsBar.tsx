@@ -8,6 +8,8 @@ import {
   MessageSquare,
   Trophy,
   TrendingUp,
+  ArrowUp,
+  ThumbsDown,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -27,20 +29,28 @@ interface StatsBarProps {
   applications: Application[];
 }
 
-type StatusKey = "wishlist" | "applied" | "interview" | "offer" | "rejected";
+type StatusKey =
+  | "wishlist"
+  | "applied"
+  | "interview"
+  | "in_progress"
+  | "offer"
+  | "rejected";
 
 const STATUS_COLORS: Record<StatusKey, string> = {
   wishlist: "#6B7280",
   applied: "#3B82F6",
   interview: "#F59E0B",
+  in_progress: "#8B5CF6",
   offer: "#10B981",
   rejected: "#EF4444",
 };
 
 // Maps each stat card to the status(es) it represents in the donut
 const CARD_STATUS_MAP: Record<string, StatusKey[]> = {
-  active: ["wishlist", "applied", "interview", "offer"],
+  active: ["wishlist", "applied", "interview", "in_progress", "offer"],
   interviews: ["interview"],
+  in_progress: ["in_progress"],
   offers: ["offer"],
   rejected: ["rejected"],
 };
@@ -56,6 +66,7 @@ const TREND_STATUS_KEYS: TrendStatusKey[] = [
   "wishlist",
   "applied",
   "interview",
+  "in_progress",
   "offer",
   "rejected",
 ];
@@ -82,6 +93,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
     (a) => a.status !== "wishlist",
   ).length;
   const applied = applications.filter((a) => a.status === "applied").length;
+  const in_progress = applications.filter(
+    (a) => a.status === "in_progress",
+  ).length;
+  const rejected = applications.filter((a) => a.status === "rejected").length;
 
   const responseRate =
     nonWishlist > 0
@@ -96,15 +111,22 @@ export default function StatsBar({ applications }: StatsBarProps) {
       wishlist: 0,
       applied: 0,
       interview: 0,
+      in_progress: 0,
       offer: 0,
       rejected: 0,
     };
     applications.forEach((app) => {
       if (app.status in counts) counts[app.status as StatusKey]++;
     });
+    const formatStatusName = (s: string) =>
+      s
+        .replace(/_/g, " ")
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
     return Object.entries(counts)
       .map(([status, value]) => ({
-        name: status.charAt(0).toUpperCase() + status.slice(1),
+        name: formatStatusName(status),
         status: status as StatusKey,
         value,
         color: STATUS_COLORS[status as StatusKey],
@@ -151,6 +173,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
           wishlist: 0,
           applied: 0,
           interview: 0,
+          in_progress: 0,
           offer: 0,
           rejected: 0,
         } satisfies TrendDatum);
@@ -275,7 +298,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
 
   const displayStatus = activeStatus ?? hoverStatus;
   const formatStatusLabel = (s: StatusKey | null | undefined) =>
-    s ? s.charAt(0).toUpperCase() + s.slice(1) : "Total Apps";
+    s
+      ? s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Total Apps";
 
   return (
     <div className="space-y-6" onClick={handleBackgroundClick}>
@@ -350,6 +375,36 @@ export default function StatsBar({ applications }: StatsBarProps) {
           );
         })()}
 
+        {/* In-progress */}
+        {(() => {
+          const h = getCardHighlight("in_progress");
+          const color = STATUS_COLORS.in_progress;
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">In Progress</span>
+                <ArrowUp
+                  size={18}
+                  className={
+                    h === "active" ? "text-violet-300" : "text-violet-400"
+                  }
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {in_progress}
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Offers */}
         {(() => {
           const h = getCardHighlight("offers");
@@ -375,6 +430,34 @@ export default function StatsBar({ applications }: StatsBarProps) {
                 className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
               >
                 {offers}
+              </p>
+            </div>
+          );
+        })()}
+
+        {/* Rejected */}
+        {(() => {
+          const h = getCardHighlight("rejected");
+          const color = STATUS_COLORS.rejected;
+          return (
+            <div
+              className={cardStyle(h)}
+              style={{
+                borderColor: cardBorderColor(h, color),
+                boxShadow: h === "active" ? `0 0 16px ${color}40` : undefined,
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm text-gray-400">Rejected</span>
+                <ThumbsDown
+                  size={18}
+                  className={h === "active" ? "text-red-300" : "text-red-400"}
+                />
+              </div>
+              <p
+                className={`text-2xl font-bold transition-colors duration-300 ${h === "active" ? "text-white" : ""}`}
+              >
+                {rejected}
               </p>
             </div>
           );
@@ -453,51 +536,34 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           paddingBottom: "12px",
                         }}
                       />
-                      <Line
-                        type="monotone"
-                        dataKey="wishlist"
-                        name="Wishlist"
-                        stroke={STATUS_COLORS.wishlist}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="applied"
-                        name="Applied"
-                        stroke={STATUS_COLORS.applied}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="interview"
-                        name="Interview"
-                        stroke={STATUS_COLORS.interview}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="offer"
-                        name="Offer"
-                        stroke={STATUS_COLORS.offer}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="rejected"
-                        name="Rejected"
-                        stroke={STATUS_COLORS.rejected}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
+                      {TREND_STATUS_KEYS.map((key) => {
+                        const isHighlighted =
+                          activeStatus === key || hoverStatus === key;
+                        const isDimmed =
+                          (activeStatus ?? hoverStatus) !== null &&
+                          !isHighlighted;
+                        const NAME_MAP: Record<StatusKey, string> = {
+                          wishlist: "Wishlist",
+                          applied: "Applied",
+                          interview: "Interview",
+                          in_progress: "In Progress",
+                          offer: "Offer",
+                          rejected: "Rejected",
+                        };
+                        return (
+                          <Line
+                            key={key}
+                            type="monotone"
+                            dataKey={key}
+                            name={NAME_MAP[key]}
+                            stroke={STATUS_COLORS[key]}
+                            strokeWidth={isHighlighted ? 4 : 2}
+                            strokeOpacity={isDimmed ? 0.15 : 1}
+                            dot={isHighlighted ? { r: 5 } : false}
+                            activeDot={{ r: 6 }}
+                          />
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 )}
