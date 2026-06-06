@@ -2,6 +2,7 @@ export type ApplicationStatus =
   | "wishlist"
   | "applied"
   | "interview"
+  | "inprogress"
   | "offer"
   | "rejected";
 
@@ -28,7 +29,13 @@ export interface ActionResult {
 
 export const STATUS_CONFIG: Record<
   ApplicationStatus,
-  { label: string; color: string; borderColor: string; bgColor: string; badgeBg: string }
+  {
+    label: string;
+    color: string;
+    borderColor: string;
+    bgColor: string;
+    badgeBg: string;
+  }
 > = {
   wishlist: {
     label: "Wishlist",
@@ -51,6 +58,13 @@ export const STATUS_CONFIG: Record<
     bgColor: "bg-amber-500/10",
     badgeBg: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   },
+  inprogress: {
+    label: "In Progress",
+    color: "text-violet-400",
+    borderColor: "border-violet-500",
+    bgColor: "bg-violet-500/10",
+    badgeBg: "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+  },
   offer: {
     label: "Offer",
     color: "text-emerald-400",
@@ -71,6 +85,7 @@ export const STATUS_ORDER: ApplicationStatus[] = [
   "wishlist",
   "applied",
   "interview",
+  "inprogress",
   "offer",
   "rejected",
 ];
