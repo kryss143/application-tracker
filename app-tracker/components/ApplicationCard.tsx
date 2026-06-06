@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import { Application, STATUS_CONFIG } from "@/lib/types";
 import {
   MapPin,
@@ -21,7 +21,7 @@ interface ApplicationCardProps {
   style?: React.CSSProperties;
 }
 
-export default function ApplicationCard({
+function ApplicationCard({
   application,
   onUpdate,
   onDelete,
@@ -168,3 +168,5 @@ export default function ApplicationCard({
     </>
   );
 }
+
+export default memo(ApplicationCard);

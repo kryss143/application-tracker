@@ -58,17 +58,17 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
       });
   }, [applications, search, filterStatus, sortBy]);
 
-  function handleSave(app: Application) {
+  const handleSave = useCallback((app: Application) => {
     setApplications((prev) => {
       const exists = prev.find((a) => a.id === app.id);
       if (exists) return prev.map((a) => (a.id === app.id ? app : a));
       return [app, ...prev];
     });
-  }
+  }, []);
 
-  function handleDelete(id: string) {
+  const handleDelete = useCallback((id: string) => {
     setApplications((prev) => prev.filter((a) => a.id !== id));
-  }
+  }, []);
 
   // ── Drag handlers ──────────────────────────────────────────────────────────
 
@@ -131,18 +131,19 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
       setDragOverId(null);
       dragCounter.current = {};
 
-      // Read current status BEFORE updating state — never inside the updater
+      // Track previous status synchronously from the updater to avoid
+      // reading a possibly stale `applications` closure.
+      let previousStatus: ApplicationStatus | undefined;
       setApplications((prev) => {
         const app = prev.find((a) => a.id === id);
-        // Same column — no-op
-        if (!app || app.status === targetStatus) return prev;
+        if (!app) return prev;
+        previousStatus = app.status;
+        if (app.status === targetStatus) return prev; // no-op
         return prev.map((a) =>
           a.id === id ? { ...a, status: targetStatus } : a,
         );
       });
 
-      // Grab previous status from the ref snapshot for rollback
-      const previousStatus = applications.find((a) => a.id === id)?.status;
       if (!previousStatus || previousStatus === targetStatus) return;
 
       // Sync to server outside of any setState updater
@@ -154,7 +155,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
           // Roll back optimistic update
           setApplications((current) =>
             current.map((a) =>
-              a.id === id ? { ...a, status: previousStatus } : a,
+              a.id === id ? { ...a, status: previousStatus! } : a,
             ),
           );
           setErrorId(id);
@@ -165,7 +166,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
         }
       });
     },
-    [applications],
+    [],
   );
 
   // Card-level drag enter (for fine-grained reorder within column, optional)
