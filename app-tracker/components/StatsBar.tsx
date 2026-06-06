@@ -492,6 +492,15 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       />
                       <Line
                         type="monotone"
+                        dataKey="inprogress"
+                        name="In Progress"
+                        stroke={STATUS_COLORS.inprogress}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
                         dataKey="offer"
                         name="Offer"
                         stroke={STATUS_COLORS.offer}
