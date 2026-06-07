@@ -95,24 +95,75 @@ export default function SignupPage() {
   if (confirmEmail) {
     return (
       <div className="min-h-screen bg-ink-950 bg-grid flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center animate-fade-slide-up">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-ink-800 border border-ink-700 mb-5 shadow-card">
-            <MailCheck className="w-6 h-6 text-gold-400" strokeWidth={1.5} />
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-gold-400/5 rounded-full blur-3xl" />
+        </div>
+
+        <div className="w-full max-w-md animate-fade-slide-up">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-ink-800 border border-ink-700 mb-5 shadow-card">
+              <MailCheck className="w-6 h-6 text-gold-400" strokeWidth={1.5} />
+            </div>
+            <h2 className="font-display text-3xl font-semibold text-ink-50 mb-1">
+              Verify your email
+            </h2>
+            <p className="text-ink-400 text-sm">
+              One last step before you get started
+            </p>
           </div>
-          <h2 className="font-display text-2xl font-semibold text-ink-50 mb-2">
-            Check your inbox
-          </h2>
-          <p className="text-ink-400 text-sm mb-6">
-            We sent a confirmation link to your email. Click it to activate your
-            account, then come back to sign in.
-          </p>
-          <button
-            onClick={() => router.push("/login")}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold-400 hover:bg-gold-300 text-ink-950 font-semibold text-sm transition-all"
-          >
-            Go to Sign in
-            <ArrowRight className="w-4 h-4" />
-          </button>
+
+          <div className="bg-ink-900 border border-ink-700 rounded-2xl p-8 shadow-card space-y-5">
+            {/* Main message */}
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-gold-400/10 border border-gold-400/20">
+              <MailCheck className="w-5 h-5 text-gold-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gold-300 mb-1">
+                  Confirmation email sent
+                </p>
+                <p className="text-sm text-ink-300">
+                  We sent a verification link to your email address. You must
+                  click that link to activate your account before you can sign
+                  in.
+                </p>
+              </div>
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-3">
+              {[
+                { step: "1", text: "Open your email inbox" },
+                {
+                  step: "2",
+                  text: 'Find the email from JobLedger and click "Confirm your email"',
+                },
+                { step: "3", text: "Return here and sign in to your account" },
+              ].map(({ step, text }) => (
+                <div key={step} className="flex items-center gap-3">
+                  <span className="flex-none w-6 h-6 rounded-full bg-ink-800 border border-ink-600 flex items-center justify-center text-xs font-mono text-ink-300">
+                    {step}
+                  </span>
+                  <p className="text-sm text-ink-300">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Tip */}
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-ink-800/60 border border-ink-700">
+              <AlertCircle className="w-4 h-4 text-ink-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-ink-400">
+                Can't find the email? Check your spam or junk folder. The link
+                expires after 24 hours.
+              </p>
+            </div>
+
+            <button
+              onClick={() => router.push("/login")}
+              className="w-full flex items-center justify-center gap-2 bg-gold-400 hover:bg-gold-300 text-ink-950 font-semibold py-3 rounded-xl transition-all duration-200 group"
+            >
+              Go to Sign in
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
         </div>
       </div>
     );
