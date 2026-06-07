@@ -72,13 +72,6 @@ export default function ConfirmPage() {
     };
   }, []);
 
-  // Redirect when confirmed
-  //   useEffect(() => {
-  //     if (state === "success") {
-  //       router.push("/dashboard");
-  //     }
-  //   }, [state, router]);
-
   return (
     <div className="min-h-screen bg-ink-950 bg-grid flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
