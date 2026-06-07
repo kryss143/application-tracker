@@ -169,7 +169,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     <div>
       {/* Toolbar */}
       <div className="mb-6">
-        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1 sm:mt-5">
+        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1 mt-5">
           Kanban Board
         </h2>
         <p className="text-sm text-gray-400">Track your job search status</p>
