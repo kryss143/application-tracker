@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { login } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 import { Briefcase, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react";
@@ -111,12 +110,16 @@ export default function LoginPage() {
           <div className="mt-6 pt-6 border-t border-ink-700 text-center">
             <p className="text-sm text-ink-400">
               No account?{" "}
-              <Link
+              <a
                 href="/signup"
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push("/signup");
+                }}
                 className="text-gold-400 hover:text-gold-300 font-medium transition-colors"
               >
                 Create one
-              </Link>
+              </a>
             </p>
           </div>
         </div>
