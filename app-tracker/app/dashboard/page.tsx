@@ -10,7 +10,7 @@ export default async function DashboardPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-400 mx-auto">
       <div className="mb-8">
-        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1 mt-5">
+        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1 sm:mt-5">
           Your Applications
         </h2>
         <p className="text-ink-400 text-sm">
