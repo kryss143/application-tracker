@@ -15,7 +15,7 @@ export default async function KanbanPage() {
   const applications = await getApplications(supabase, user!.id);
 
   return (
-    <main className="max-w-400 mx-auto px-4 md:px-8 pt-24 pb-12">
+    <main className="max-w-400 mx-auto px-4 md:px-8 py-6 pb-12">
       <KanbanBoard initialApplications={applications} />
     </main>
   );
