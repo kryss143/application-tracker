@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const applications = await getApplications();
 
   return (
-    <div className="px-4 md:px-8 py-6 max-w-400 mx-auto">
+    <div className="px-4 md:px-8 py-8 max-w-400 mx-auto">
       <div className="mb-8">
         <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-50 mb-1">
           Your Applications
