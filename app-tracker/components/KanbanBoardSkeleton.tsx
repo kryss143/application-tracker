@@ -34,7 +34,7 @@ function KanbanColumnSkeleton({
   cards: number;
 }) {
   return (
-    <div className="flex flex-col gap-3 min-w-[240px] w-[240px]">
+    <div className="flex flex-col gap-3 min-w-60 w-60">
       {/* Column header */}
       <div className="flex items-center gap-2 px-1">
         <Skeleton className="h-4 w-24" />
