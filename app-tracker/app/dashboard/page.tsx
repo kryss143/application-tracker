@@ -1,6 +1,7 @@
+// Dashboard page
+
 import { getApplications } from "@/actions/applications";
 import StatsBar from "@/components/StatsBar";
-import KanbanBoard from "@/components/KanbanBoard";
 
 export const dynamic = "force-dynamic";
 
