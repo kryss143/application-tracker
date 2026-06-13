@@ -18,8 +18,8 @@ import {
   Cell,
   Tooltip,
   Legend,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -510,7 +510,30 @@ export default function StatsBar({ applications }: StatsBarProps) {
               <div className="h-80 min-w-0">
                 {mounted && (
                   <ResponsiveContainer width="100%" height={320} minWidth={0}>
-                    <LineChart data={trendData}>
+                    <AreaChart data={trendData}>
+                      <defs>
+                        {TREND_STATUS_KEYS.map((key) => (
+                          <linearGradient
+                            key={key}
+                            id={`gradient-${key}`}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor={STATUS_COLORS[key]}
+                              stopOpacity={0.25}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor={STATUS_COLORS[key]}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       <CartesianGrid
                         strokeDasharray="3 3"
                         stroke="#374151"
@@ -551,7 +574,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           rejected: "Rejected",
                         };
                         return (
-                          <Line
+                          <Area
                             key={key}
                             type="monotone"
                             dataKey={key}
@@ -559,12 +582,14 @@ export default function StatsBar({ applications }: StatsBarProps) {
                             stroke={STATUS_COLORS[key]}
                             strokeWidth={isHighlighted ? 4 : 2}
                             strokeOpacity={isDimmed ? 0.15 : 1}
+                            fill={`url(#gradient-${key})`}
+                            fillOpacity={isDimmed ? 0.05 : 1}
                             dot={isHighlighted ? { r: 5 } : false}
                             activeDot={{ r: 6 }}
                           />
                         );
                       })}
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 )}
               </div>
