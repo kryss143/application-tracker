@@ -105,7 +105,10 @@ export default function ApplicationForm({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg bg-ink-900 border border-ink-700 rounded-2xl shadow-card-hover max-h-[90vh] flex flex-col animate-fade-slide-up">
+      <div
+        className="relative w-full max-w-lg bg-ink-900 border border-ink-700 rounded-2xl shadow-card-hover max-h-[90vh] flex flex-col animate-fade-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-ink-700">
           <h2 className="font-display text-xl font-semibold text-ink-50">
