@@ -100,13 +100,10 @@ export default function ApplicationForm({
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-ink-950/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-ink-950/90" onClick={onClose} />
 
       <div
-        className="relative w-full max-w-lg bg-ink-900 border border-ink-700 rounded-2xl shadow-card-hover max-h-[90vh] flex flex-col animate-fade-slide-up"
+        className="relative z-10 w-full max-w-lg bg-ink-900 border border-ink-700 rounded-2xl shadow-card-hover max-h-[90vh] flex flex-col animate-fade-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
