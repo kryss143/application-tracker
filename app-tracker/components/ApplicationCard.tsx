@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import ApplicationForm from "./ApplicationForm";
+import ApplicationViewModal from "./ApplicationViewModal";
 import DeleteDialog from "./DeleteDialog";
 
 interface ApplicationCardProps {
@@ -27,6 +28,7 @@ function ApplicationCard({
   onDelete,
   style,
 }: ApplicationCardProps) {
+  const [showView, setShowView] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -47,7 +49,8 @@ function ApplicationCard({
     <>
       <div
         style={style}
-        className={`group relative bg-ink-800 border border-ink-700 rounded-xl p-4 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-default border-l-2 ${config.borderColor}`}
+        onClick={() => setShowView(true)}
+        className={`group relative bg-ink-800 border border-ink-700 rounded-xl p-4 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer border-l-2 ${config.borderColor}`}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
@@ -63,7 +66,10 @@ function ApplicationCard({
           {/* Menu */}
           <div className="relative shrink-0">
             <button
-              onClick={() => setShowMenu(!showMenu)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-500 hover:text-ink-200 hover:bg-ink-700 transition-all opacity-0 group-hover:opacity-100"
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -73,9 +79,15 @@ function ApplicationCard({
               <>
                 <div
                   className="fixed inset-0 z-10"
-                  onClick={() => setShowMenu(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                  }}
                 />
-                <div className="absolute right-0 top-8 z-20 bg-ink-800 border border-ink-600 rounded-xl shadow-card-hover overflow-hidden min-w-32.5">
+                <div
+                  className="absolute right-0 top-8 z-20 bg-ink-800 border border-ink-600 rounded-xl shadow-card-hover overflow-hidden min-w-32.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={() => {
                       setShowMenu(false);
@@ -149,6 +161,17 @@ function ApplicationCard({
           </span>
         </div>
       </div>
+
+      {showView && (
+        <ApplicationViewModal
+          application={application}
+          onClose={() => setShowView(false)}
+          onEdit={() => {
+            setShowView(false);
+            setShowEdit(true);
+          }}
+        />
+      )}
 
       {showEdit && (
         <ApplicationForm
