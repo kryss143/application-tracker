@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   Application,
@@ -58,6 +59,12 @@ export default function ApplicationForm({
   const [error, setError] = useState<string | null>(null);
   const [optimisticId, setOptimisticId] = useState<string | null>(null);
 
+  // Guards against SSR mismatch — document.body only exists on the client.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!optimisticId) {
       try {
@@ -67,6 +74,24 @@ export default function ApplicationForm({
       }
     }
   }, [optimisticId]);
+
+  // Lock background scroll while the modal is open.
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
+  // Close on Escape for good measure.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const isEdit = !!application;
 
@@ -98,8 +123,10 @@ export default function ApplicationForm({
     router.refresh();
   }
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink-950/90" onClick={onClose} />
 
       <div
@@ -255,6 +282,7 @@ export default function ApplicationForm({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
