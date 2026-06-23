@@ -70,8 +70,6 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     setApplications((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
-  // ── Drag handlers ──────────────────────────────────────────────────────────
-
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     setDraggingId(id);
     e.dataTransfer.effectAllowed = "move";
@@ -83,16 +81,14 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     }, 0);
   }, []);
 
-  const handleDragEnd = useCallback(() => {
-    if (draggingId) {
-      const el = document.getElementById(`card-${draggingId}`);
-      if (el) el.style.opacity = "";
-    }
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    const el = e.currentTarget as HTMLElement | null;
+    if (el) el.style.opacity = "";
     setDraggingId(null);
     setDragOverStatus(null);
     setDragOverId(null);
     dragCounter.current = {};
-  }, [draggingId]);
+  }, []);
 
   // Column-level drag events
   const handleColumnDragEnter = useCallback(
@@ -133,7 +129,7 @@ export default function KanbanBoard({ initialApplications }: KanbanBoardProps) {
     setDragOverId(null);
     dragCounter.current = {};
 
-    // ✅ Read previousStatus BEFORE calling setApplications
+    // Read previousStatus BEFORE calling setApplications
     const previousStatus = applications.find((a) => a.id === id)?.status;
     if (!previousStatus || previousStatus === targetStatus) return;
 
