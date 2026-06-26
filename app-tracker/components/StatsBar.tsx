@@ -18,8 +18,8 @@ import {
   Cell,
   Tooltip,
   Legend,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -537,7 +537,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
               <div className="h-80 min-w-0">
                 {mounted && (
                   <ResponsiveContainer width="100%" height={320} minWidth={0}>
-                    <AreaChart data={trendData}>
+                    <BarChart data={trendData}>
                       <defs>
                         {TREND_STATUS_KEYS.map((key) => (
                           <linearGradient
@@ -551,12 +551,12 @@ export default function StatsBar({ applications }: StatsBarProps) {
                             <stop
                               offset="5%"
                               stopColor={STATUS_COLORS[key]}
-                              stopOpacity={0.25}
+                              stopOpacity={0.9}
                             />
                             <stop
                               offset="95%"
                               stopColor={STATUS_COLORS[key]}
-                              stopOpacity={0}
+                              stopOpacity={0.5}
                             />
                           </linearGradient>
                         ))}
@@ -565,6 +565,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         strokeDasharray="3 3"
                         stroke="#374151"
                         opacity={0.4}
+                        vertical={false}
                       />
                       <XAxis
                         dataKey="day"
@@ -578,7 +579,10 @@ export default function StatsBar({ applications }: StatsBarProps) {
                         axisLine={{ stroke: "#4B5563" }}
                         tickLine={{ stroke: "#4B5563" }}
                       />
-                      <Tooltip content={<LineTooltipContent />} />
+                      <Tooltip
+                        content={<LineTooltipContent />}
+                        cursor={{ fill: "#ffffff0d" }}
+                      />
                       <Legend
                         verticalAlign="top"
                         wrapperStyle={{
@@ -586,7 +590,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           paddingBottom: "12px",
                         }}
                       />
-                      {TREND_STATUS_KEYS.map((key) => {
+                      {TREND_STATUS_KEYS.map((key, idx) => {
                         const isHighlighted =
                           activeStatus === key || hoverStatus === key;
                         const isDimmed =
@@ -601,22 +605,26 @@ export default function StatsBar({ applications }: StatsBarProps) {
                           rejected: "Rejected",
                         };
                         return (
-                          <Area
+                          <Bar
                             key={key}
-                            type="monotone"
+                            stackId="day"
                             dataKey={key}
                             name={NAME_MAP[key]}
-                            stroke={STATUS_COLORS[key]}
-                            strokeWidth={isHighlighted ? 4 : 2}
-                            strokeOpacity={isDimmed ? 0.15 : 1}
                             fill={`url(#gradient-${key})`}
-                            fillOpacity={isDimmed ? 0.05 : 1}
-                            dot={isHighlighted ? { r: 5 } : false}
-                            activeDot={{ r: 6 }}
+                            fillOpacity={isDimmed ? 0.2 : 1}
+                            stroke={
+                              isHighlighted ? STATUS_COLORS[key] : "transparent"
+                            }
+                            strokeWidth={isHighlighted ? 2 : 0}
+                            radius={
+                              idx === TREND_STATUS_KEYS.length - 1
+                                ? [4, 4, 0, 0]
+                                : 0
+                            }
                           />
                         );
                       })}
-                    </AreaChart>
+                    </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
