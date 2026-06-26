@@ -314,7 +314,7 @@ export default function ApplicationForm({
                   name="applied_date"
                   type="date"
                   defaultValue={application?.applied_date ?? ""}
-                  className={`${INPUT_CLASS} ${
+                  className={`${INPUT_CLASS} [&::-webkit-calendar-picker-indicator]:filter-[invert(0.8)_sepia(1)_saturate(3)_hue-rotate(10deg)] ${
                     fieldErrors.applied_date ? INPUT_ERROR_CLASS : ""
                   }`}
                 />
