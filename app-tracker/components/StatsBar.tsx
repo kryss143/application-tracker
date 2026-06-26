@@ -154,6 +154,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
 
   const trendData = useMemo(() => {
     const dayMap = new Map<string, TrendDatum>();
+
     applications.forEach((app) => {
       const rawDate = app.created_at || app.applied_date;
       if (!rawDate) return;
@@ -181,9 +182,35 @@ export default function StatsBar({ applications }: StatsBarProps) {
       day[app.status as TrendStatusKey] += 1;
       dayMap.set(dayKey, day);
     });
-    return Array.from(dayMap.values()).sort((a, b) =>
-      a.dayKey.localeCompare(b.dayKey),
-    );
+
+    if (dayMap.size === 0) return [];
+
+    // Fill every day in the range with zeros, so days without
+    // activity render as an explicit 0 instead of being skipped
+    // (skipping them lets Recharts' monotone curve interpolate a
+    // smooth bump between sparse points, which is misleading).
+    const sortedKeys = Array.from(dayMap.keys()).sort();
+    const firstDay = new Date(`${sortedKeys[0]}T00:00:00`);
+    const lastDay = new Date(`${sortedKeys[sortedKeys.length - 1]}T00:00:00`);
+
+    const filled: TrendDatum[] = [];
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      const dayKey = d.toISOString().slice(0, 10);
+      filled.push(
+        dayMap.get(dayKey) ?? {
+          dayKey,
+          day: `${MONTH_ABBREV[d.getMonth()]} ${d.getDate()}`,
+          wishlist: 0,
+          applied: 0,
+          interview: 0,
+          in_progress: 0,
+          offer: 0,
+          rejected: 0,
+        },
+      );
+    }
+
+    return filled;
   }, [applications]);
 
   const hasAnalyticsData =
