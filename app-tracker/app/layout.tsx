@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-// @ts-ignore: Allow importing global CSS without type declarations in this Next.js app
 import "./globals.css";
+import { ToastProvider } from "./contexts/ToastContext";
 
 export const metadata: Metadata = {
   title: "JobLedger — Track Your Applications",
@@ -28,7 +28,7 @@ export default function RootLayout({
         <link rel="icon" href="/icon.png" sizes="any" />
       </head>
       <body className="font-body bg-ink-950 text-ink-100 antialiased">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

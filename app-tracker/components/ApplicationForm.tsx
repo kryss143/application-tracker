@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { createApplication, updateApplication } from "@/actions/applications";
 import { X, Loader2 } from "lucide-react";
+import { useToast } from "@/app/contexts/ToastContext";
 
 interface ApplicationFormProps {
   application?: Application;
@@ -56,6 +57,7 @@ export default function ApplicationForm({
 }: ApplicationFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [optimisticId, setOptimisticId] = useState<string | null>(null);
 
@@ -101,6 +103,7 @@ export default function ApplicationForm({
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    const companyName = formData.get("company_name") as string;
     const result = isEdit
       ? await updateApplication(application.id, formData)
       : await createApplication(formData);
@@ -108,6 +111,10 @@ export default function ApplicationForm({
     if (!result.success) {
       setError(result.error ?? "Something went wrong");
       setLoading(false);
+      showToast(
+        "error",
+        result.error ?? `Failed to ${isEdit ? "update" : "add"} application`,
+      );
       return;
     }
 
@@ -119,6 +126,12 @@ export default function ApplicationForm({
           : `temp-${Date.now()}`));
 
     onSave(buildOptimistic(formData, application, idForOptimistic));
+    showToast(
+      "success",
+      isEdit
+        ? `${companyName} updated successfully`
+        : `${companyName} added successfully`,
+    );
     onClose();
     router.refresh();
   }
