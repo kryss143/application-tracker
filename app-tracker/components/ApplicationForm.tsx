@@ -331,8 +331,8 @@ export default function ApplicationForm({
                   name="followup_date"
                   type="date"
                   defaultValue={application?.followup_date ?? ""}
-                  className={`${INPUT_CLASS} ${
-                    fieldErrors.followup_date ? INPUT_ERROR_CLASS : ""
+                  className={`${INPUT_CLASS} [&::-webkit-calendar-picker-indicator]:filter-[invert(0.8)_sepia(1)_saturate(3)_hue-rotate(10deg)] ${
+                    fieldErrors.applied_date ? INPUT_ERROR_CLASS : ""
                   }`}
                 />
                 {fieldErrors.followup_date && (
