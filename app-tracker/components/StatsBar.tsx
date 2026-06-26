@@ -185,7 +185,9 @@ export default function StatsBar({ applications }: StatsBarProps) {
       dayMap.set(dayKey, day);
     });
 
-    return Array.from(dayMap.values());
+    return Array.from(dayMap.values()).sort(
+      (a, b) => new Date(a.dayKey).getTime() - new Date(b.dayKey).getTime(),
+    );
   }, [applications]);
 
   const hasAnalyticsData =
