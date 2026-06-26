@@ -12,6 +12,11 @@ import {
 import { createApplication, updateApplication } from "@/actions/applications";
 import { X, Loader2 } from "lucide-react";
 import { useToast } from "@/app/contexts/ToastContext";
+import {
+  applicationSchema,
+  flattenZodErrors,
+  type ApplicationFormErrors,
+} from "@/lib/schemas/application";
 
 interface ApplicationFormProps {
   application?: Application;
@@ -22,6 +27,9 @@ interface ApplicationFormProps {
 
 const INPUT_CLASS =
   "w-full bg-ink-800 border border-ink-600 rounded-xl px-3.5 py-2.5 text-sm text-ink-100 placeholder-ink-500 focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/20 transition-all";
+
+const INPUT_ERROR_CLASS =
+  "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/20";
 
 const LABEL_CLASS =
   "block text-xs font-medium text-ink-300 uppercase tracking-wider mb-1.5";
@@ -59,6 +67,7 @@ export default function ApplicationForm({
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ApplicationFormErrors>({});
   const [optimisticId, setOptimisticId] = useState<string | null>(null);
 
   // Guards against SSR mismatch — document.body only exists on the client.
@@ -99,11 +108,24 @@ export default function ApplicationForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
-    const companyName = formData.get("company_name") as string;
+    const raw = Object.fromEntries(formData.entries());
+
+    // Validate client-side input shape before hitting the server action.
+    const parsed = applicationSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      const errors = flattenZodErrors(parsed.error);
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
+      return;
+    }
+
+    setLoading(true);
+    const companyName = parsed.data.company_name;
     const result = isEdit
       ? await updateApplication(application.id, formData)
       : await createApplication(formData);
@@ -161,7 +183,12 @@ export default function ApplicationForm({
 
         {/* Body */}
         <div className="overflow-y-auto scrollbar-thin flex-1">
-          <form id="app-form" onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form
+            id="app-form"
+            onSubmit={handleSubmit}
+            noValidate
+            className="p-6 space-y-5"
+          >
             {error && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {error}
@@ -174,11 +201,17 @@ export default function ApplicationForm({
                 <input
                   name="company_name"
                   type="text"
-                  required
                   defaultValue={application?.company_name}
                   placeholder="Google, Meta, Stripe…"
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.company_name ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.company_name && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.company_name}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
@@ -186,11 +219,17 @@ export default function ApplicationForm({
                 <input
                   name="job_title"
                   type="text"
-                  required
                   defaultValue={application?.job_title}
                   placeholder="Senior Software Engineer"
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.job_title ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.job_title && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.job_title}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2 sm:col-span-1">
@@ -198,7 +237,9 @@ export default function ApplicationForm({
                 <select
                   name="status"
                   defaultValue={application?.status ?? defaultStatus}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.status ? INPUT_ERROR_CLASS : ""
+                  }`}
                 >
                   {STATUS_ORDER.map((s) => (
                     <option key={s} value={s}>
@@ -206,6 +247,11 @@ export default function ApplicationForm({
                     </option>
                   ))}
                 </select>
+                {fieldErrors.status && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.status}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2 sm:col-span-1">
@@ -215,19 +261,33 @@ export default function ApplicationForm({
                   type="text"
                   defaultValue={application?.location ?? ""}
                   placeholder="San Francisco, CA"
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.location ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.location && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.location}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
                 <label className={LABEL_CLASS}>Job URL</label>
                 <input
                   name="job_url"
-                  type="url"
+                  type="text"
                   defaultValue={application?.job_url ?? ""}
                   placeholder="https://jobs.example.com/…"
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.job_url ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.job_url && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.job_url}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
@@ -237,8 +297,15 @@ export default function ApplicationForm({
                   type="text"
                   defaultValue={application?.salary_range ?? ""}
                   placeholder="₱120k - ₱160k"
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.salary_range ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.salary_range && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.salary_range}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -247,8 +314,15 @@ export default function ApplicationForm({
                   name="applied_date"
                   type="date"
                   defaultValue={application?.applied_date ?? ""}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.applied_date ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.applied_date && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.applied_date}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -257,8 +331,15 @@ export default function ApplicationForm({
                   name="followup_date"
                   type="date"
                   defaultValue={application?.followup_date ?? ""}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${
+                    fieldErrors.followup_date ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.followup_date && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.followup_date}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
@@ -268,8 +349,15 @@ export default function ApplicationForm({
                   rows={3}
                   defaultValue={application?.notes ?? ""}
                   placeholder="Add any notes, contacts, or follow-up info…"
-                  className={`${INPUT_CLASS} resize-none`}
+                  className={`${INPUT_CLASS} resize-none ${
+                    fieldErrors.notes ? INPUT_ERROR_CLASS : ""
+                  }`}
                 />
+                {fieldErrors.notes && (
+                  <p className="mt-1 text-xs text-red-400">
+                    {fieldErrors.notes}
+                  </p>
+                )}
               </div>
             </div>
           </form>
