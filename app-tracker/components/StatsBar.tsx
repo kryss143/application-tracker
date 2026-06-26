@@ -158,59 +158,34 @@ export default function StatsBar({ applications }: StatsBarProps) {
     applications.forEach((app) => {
       const rawDate = app.created_at || app.applied_date;
       if (!rawDate) return;
+
       const date = new Date(rawDate);
       if (Number.isNaN(date.getTime())) return;
+
       if (!TREND_STATUS_KEYS.includes(app.status as TrendStatusKey)) return;
 
-      const dayKey = date.toISOString().slice(0, 10);
-      const day =
-        dayMap.get(dayKey) ??
-        ({
-          dayKey,
-          day: (() => {
-            const dt = new Date(`${dayKey}T00:00:00`);
-            return `${MONTH_ABBREV[dt.getMonth()]} ${dt.getDate()}`;
-          })(),
-          wishlist: 0,
-          applied: 0,
-          interview: 0,
-          in_progress: 0,
-          offer: 0,
-          rejected: 0,
-        } satisfies TrendDatum);
+      const dayKey = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0"),
+      ].join("-");
+
+      const day = dayMap.get(dayKey) ?? {
+        dayKey,
+        day: `${MONTH_ABBREV[date.getMonth()]} ${date.getDate()}`,
+        wishlist: 0,
+        applied: 0,
+        interview: 0,
+        in_progress: 0,
+        offer: 0,
+        rejected: 0,
+      };
 
       day[app.status as TrendStatusKey] += 1;
       dayMap.set(dayKey, day);
     });
 
-    if (dayMap.size === 0) return [];
-
-    // Fill every day in the range with zeros, so days without
-    // activity render as an explicit 0 instead of being skipped
-    // (skipping them lets Recharts' monotone curve interpolate a
-    // smooth bump between sparse points, which is misleading).
-    const sortedKeys = Array.from(dayMap.keys()).sort();
-    const firstDay = new Date(`${sortedKeys[0]}T00:00:00`);
-    const lastDay = new Date(`${sortedKeys[sortedKeys.length - 1]}T00:00:00`);
-
-    const filled: TrendDatum[] = [];
-    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-      const dayKey = d.toISOString().slice(0, 10);
-      filled.push(
-        dayMap.get(dayKey) ?? {
-          dayKey,
-          day: `${MONTH_ABBREV[d.getMonth()]} ${d.getDate()}`,
-          wishlist: 0,
-          applied: 0,
-          interview: 0,
-          in_progress: 0,
-          offer: 0,
-          rejected: 0,
-        },
-      );
-    }
-
-    return filled;
+    return Array.from(dayMap.values());
   }, [applications]);
 
   const hasAnalyticsData =
