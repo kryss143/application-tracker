@@ -12,6 +12,7 @@ import {
 import { createApplication, updateApplication } from "@/actions/applications";
 import { X, Loader2 } from "lucide-react";
 import { useToast } from "@/app/contexts/ToastContext";
+import DiscardChangesDialog from "../components/DiscardChangeDialog";
 import {
   applicationSchema,
   flattenZodErrors,
@@ -71,6 +72,7 @@ export default function ApplicationForm({
   const [optimisticId, setOptimisticId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [mouseDownOnBackdrop, setMouseDownOnBackdrop] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   // Guards against SSR mismatch — document.body only exists on the client.
   const [mounted, setMounted] = useState(false);
@@ -112,10 +114,8 @@ export default function ApplicationForm({
   // Confirms before discarding unsaved changes, otherwise closes immediately.
   function attemptClose() {
     if (isDirty) {
-      const confirmClose = window.confirm(
-        "You have unsaved changes. Discard them?",
-      );
-      if (!confirmClose) return;
+      setShowDiscardDialog(true);
+      return;
     }
     onClose();
   }
@@ -422,6 +422,17 @@ export default function ApplicationForm({
           </button>
         </div>
       </div>
+
+      {showDiscardDialog && (
+        <DiscardChangesDialog
+          onClose={() => setShowDiscardDialog(false)}
+          onConfirm={() => {
+            setShowDiscardDialog(false);
+            setIsDirty(false);
+            onClose();
+          }}
+        />
+      )}
     </div>,
     document.body,
   );
