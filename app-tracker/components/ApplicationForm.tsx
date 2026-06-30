@@ -69,6 +69,8 @@ export default function ApplicationForm({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ApplicationFormErrors>({});
   const [optimisticId, setOptimisticId] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [mouseDownOnBackdrop, setMouseDownOnBackdrop] = useState(false);
 
   // Guards against SSR mismatch — document.body only exists on the client.
   const [mounted, setMounted] = useState(false);
@@ -162,7 +164,23 @@ export default function ApplicationForm({
 
   return createPortal(
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink-950/90" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-ink-950/90"
+        onMouseDown={(e) =>
+          setMouseDownOnBackdrop(e.target === e.currentTarget)
+        }
+        onMouseUp={(e) => {
+          if (mouseDownOnBackdrop && e.target === e.currentTarget) {
+            if (isDirty) {
+              const confirmClose = window.confirm(
+                "You have unsaved changes. Discard them?",
+              );
+              if (!confirmClose) return;
+            }
+            onClose();
+          }
+        }}
+      />
 
       <div
         className="relative z-10 w-full max-w-lg bg-ink-900 border border-ink-700 rounded-2xl shadow-card-hover max-h-[90vh] flex flex-col animate-fade-slide-up"
@@ -186,6 +204,7 @@ export default function ApplicationForm({
           <form
             id="app-form"
             onSubmit={handleSubmit}
+            onChange={() => setIsDirty(true)}
             noValidate
             className="p-6 space-y-5"
           >
