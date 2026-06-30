@@ -429,6 +429,7 @@ export default function ApplicationForm({
           onConfirm={() => {
             setShowDiscardDialog(false);
             setIsDirty(false);
+            showToast("error", "Changes discarded");
             onClose();
           }}
         />
