@@ -100,13 +100,36 @@ export default function ApplicationForm({
   // Close on Escape for good measure.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") attemptClose();
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirty]);
 
   const isEdit = !!application;
+
+  // Confirms before discarding unsaved changes, otherwise closes immediately.
+  function attemptClose() {
+    if (isDirty) {
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Discard them?",
+      );
+      if (!confirmClose) return;
+    }
+    onClose();
+  }
+
+  function handleBackdropMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    setMouseDownOnBackdrop(e.target === e.currentTarget);
+  }
+
+  function handleBackdropMouseUp(e: React.MouseEvent<HTMLDivElement>) {
+    if (mouseDownOnBackdrop && e.target === e.currentTarget) {
+      attemptClose();
+    }
+    setMouseDownOnBackdrop(false);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -156,6 +179,7 @@ export default function ApplicationForm({
         ? `${companyName} updated successfully`
         : `${companyName} added successfully`,
     );
+    setIsDirty(false);
     onClose();
     router.refresh();
   }
@@ -163,23 +187,16 @@ export default function ApplicationForm({
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="app-form-title"
+    >
       <div
         className="absolute inset-0 bg-ink-950/90"
-        onMouseDown={(e) =>
-          setMouseDownOnBackdrop(e.target === e.currentTarget)
-        }
-        onMouseUp={(e) => {
-          if (mouseDownOnBackdrop && e.target === e.currentTarget) {
-            if (isDirty) {
-              const confirmClose = window.confirm(
-                "You have unsaved changes. Discard them?",
-              );
-              if (!confirmClose) return;
-            }
-            onClose();
-          }
-        }}
+        onMouseDown={handleBackdropMouseDown}
+        onMouseUp={handleBackdropMouseUp}
       />
 
       <div
@@ -188,11 +205,14 @@ export default function ApplicationForm({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-ink-700">
-          <h2 className="font-display text-xl font-semibold text-ink-50">
+          <h2
+            id="app-form-title"
+            className="font-display text-xl font-semibold text-ink-50"
+          >
             {isEdit ? "Edit Application" : "Add Application"}
           </h2>
           <button
-            onClick={onClose}
+            onClick={attemptClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-ink-700 transition-all"
           >
             <X className="w-4 h-4" />
@@ -386,7 +406,7 @@ export default function ApplicationForm({
         <div className="px-6 py-4 border-t border-ink-700 flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={onClose}
+            onClick={attemptClose}
             className="px-4 py-2 rounded-xl text-sm text-ink-300 hover:text-ink-100 hover:bg-ink-700 transition-all"
           >
             Cancel
