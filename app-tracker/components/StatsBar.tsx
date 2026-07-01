@@ -75,6 +75,8 @@ export default function StatsBar({ applications }: StatsBarProps) {
   const [activeStatus, setActiveStatus] = useState<StatusKey | null>(null);
   const [hoverStatus, setHoverStatus] = useState<StatusKey | null>(null);
   const [mounted, setMounted] = useState(false);
+  // Tracks which year-month the trend chart is showing (e.g. "2025-06")
+  const [trendMonth, setTrendMonth] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -189,6 +191,47 @@ export default function StatsBar({ applications }: StatsBarProps) {
       (a, b) => new Date(a.dayKey).getTime() - new Date(b.dayKey).getTime(),
     );
   }, [applications]);
+
+  const trendMonths = useMemo(() => {
+    const months = Array.from(
+      new Set(trendData.map((d) => d.dayKey.slice(0, 7))),
+    );
+    return months.sort();
+  }, [trendData]);
+
+  // Default to the latest month when data loads
+  const activeTrendMonth =
+    trendMonth ?? trendMonths[trendMonths.length - 1] ?? null;
+
+  const filteredTrendData = useMemo(() => {
+    if (!activeTrendMonth) return trendData;
+    return trendData.filter((d) => d.dayKey.startsWith(activeTrendMonth));
+  }, [trendData, activeTrendMonth]);
+
+  const trendMonthIndex = trendMonths.indexOf(activeTrendMonth ?? "");
+  const canGoPrev = trendMonthIndex > 0;
+  const canGoNext = trendMonthIndex < trendMonths.length - 1;
+
+  const MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  function formatTrendMonth(ym: string | null) {
+    if (!ym) return "";
+    const [year, month] = ym.split("-");
+    return `${MONTH_NAMES[parseInt(month, 10) - 1]} ${year}`;
+  }
 
   const hasAnalyticsData =
     applications.length > 0 && (statusData.length > 0 || trendData.length > 0);
@@ -505,16 +548,52 @@ export default function StatsBar({ applications }: StatsBarProps) {
             {/* Application Trend                         */}
             {/* ========================================= */}
             <div className="min-w-0 rounded-xl border border-ink-700 bg-ink-900/60 p-5 backdrop-blur-sm lg:col-span-2">
-              <div className="mb-4">
-                <h3 className="font-semibold text-white">Application Trend</h3>
-                <p className="text-sm text-gray-400">
-                  Applications submitted by day
-                </p>
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-white">
+                    Application Trend
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Applications submitted by day
+                  </p>
+                  {activeTrendMonth && (
+                    <p className="mt-0.5 text-sm font-medium text-ink-200">
+                      {formatTrendMonth(activeTrendMonth)}
+                    </p>
+                  )}
+                </div>
+
+                {trendMonths.length > 1 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() =>
+                        canGoPrev &&
+                        setTrendMonth(trendMonths[trendMonthIndex - 1])
+                      }
+                      disabled={!canGoPrev}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-ink-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      aria-label="Previous month"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() =>
+                        canGoNext &&
+                        setTrendMonth(trendMonths[trendMonthIndex + 1])
+                      }
+                      disabled={!canGoNext}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-ink-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      aria-label="Next month"
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="h-80 min-w-0">
                 {mounted && (
                   <ResponsiveContainer width="100%" height={320} minWidth={0}>
-                    <BarChart data={trendData}>
+                    <BarChart data={filteredTrendData}>
                       <defs>
                         {TREND_STATUS_KEYS.map((key) => (
                           <linearGradient
