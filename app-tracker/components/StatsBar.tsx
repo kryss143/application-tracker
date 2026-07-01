@@ -10,6 +10,8 @@ import {
   TrendingUp,
   ArrowUp,
   ThumbsDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -574,7 +576,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-ink-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       aria-label="Previous month"
                     >
-                      ‹
+                      <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() =>
@@ -585,7 +587,7 @@ export default function StatsBar({ applications }: StatsBarProps) {
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-ink-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       aria-label="Next month"
                     >
-                      ›
+                      <ChevronRight className="w-5 h-5" />
                     </button>
                   </div>
                 )}
