@@ -116,7 +116,7 @@ Wishlist → Applied → Interview → In Progress → Offer → Rejected
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+ (pinned in `app-tracker/.nvmrc`, run `nvm use` inside `app-tracker/`)
 - A [Supabase](https://supabase.com) account (free tier works)
 
 ### 1. Clone & install

@@ -23,7 +23,7 @@ const optionalDateString = z
   .transform((v) => (v === "" ? undefined : v))
   .optional()
   .refine((v) => !v || !Number.isNaN(new Date(v).getTime()), {
-    message: "Enter a valid date",
+    error: "Enter a valid date",
   });
 
 export const applicationSchema = z
@@ -46,8 +46,8 @@ export const applicationSchema = z
       .trim()
       .transform((v) => (v === "" ? undefined : v))
       .optional()
-      .refine((v) => !v || z.string().url().safeParse(v).success, {
-        message: "Enter a valid URL (include https://)",
+      .refine((v) => !v || z.url().safeParse(v).success, {
+        error: "Enter a valid URL (include https://)",
       }),
     location: optionalTrimmedString,
     salary_range: optionalTrimmedString.pipe(
@@ -59,7 +59,7 @@ export const applicationSchema = z
       .transform((v) => (v === "" ? undefined : v))
       .optional()
       .refine((v) => !v || v.length <= 2000, {
-        message: "Notes must be under 2000 characters",
+        error: "Notes must be under 2000 characters",
       }),
     applied_date: optionalDateString,
     followup_date: optionalDateString,
@@ -70,7 +70,7 @@ export const applicationSchema = z
       return new Date(data.followup_date) >= new Date(data.applied_date);
     },
     {
-      message: "Follow-up date can't be before the applied date",
+      error: "Follow-up date can't be before the applied date",
       path: ["followup_date"],
     },
   );

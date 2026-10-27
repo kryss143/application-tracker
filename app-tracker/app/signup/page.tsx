@@ -18,7 +18,7 @@ const signupSchema = z
     email: z
       .string()
       .min(1, "Email is required.")
-      .email("Please enter a valid email address."),
+      .pipe(z.email("Please enter a valid email address.")),
     password: z
       .string()
       .min(1, "Password is required.")
@@ -26,7 +26,7 @@ const signupSchema = z
     confirm_password: z.string().min(1, "Please confirm your password."),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "Passwords don't match. Please try again.",
+    error: "Passwords don't match. Please try again.",
     path: ["confirm_password"],
   });
 
